@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KeuTrack - Transaksi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Poppins', 'sans-serif'],
+          },
+          colors: {
+            primary: '#2c3e50',
+            secondary: '#64748b',
+            success: '#10B981',
+            warning: '#F59E0B',
+            danger: '#EF4444',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-50 font-sans">
+  <!-- Sidebar -->
+  <div class="fixed inset-y-0 left-0 w-64 bg-primary text-white">
+    <div class="p-6">
+      <div class="flex items-center space-x-4">
+        <img src="./images/LOGO KT.svg" alt="KeuTrack Logo" class="w-[70px] h-[70px]">
+        <span class="text-2xl font-semibold mt-1">KeuTrack</span>
+      </div>
+    </div>
+    <nav class="mt-6">
+      <ul class="space-y-2 px-4">
+        <li>
+          <a href="dashboard.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">dashboard</span>
+            <span>Dasbor</span>
+          </a>
+        </li>
+        <li>
+          <a href="produk.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">inventory_2</span>
+            <span>Produk/Item</span>
+          </a>
+        </li>
+        <li>
+          <a href="transaksi.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-white/20">
+            <span class="material-icons">swap_horiz</span>
+            <span>Transaksi</span>
+          </a>
+        </li>
+        <li>
+          <a href="laporan.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">bar_chart</span>
+            <span>Laporan Keuangan</span>
+          </a>
+        </li>
+        <li>
+          <a href="riwayat-transaksi.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">history</span>
+            <span>Riwayat Transaksi</span>
+          </a>
+        </li>
+        <li>
+          <a href="export.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">cloud_download</span>
+            <span>Export/Backup</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="absolute bottom-0 w-full p-4">
+      <button class="flex items-center space-x-3 w-full px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+        <span class="material-icons">logout</span>
+        <span>Log Out</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="ml-64 p-8">
+    <!-- Header -->
+    <div class="bg-primary text-white rounded-lg p-6 mb-8">
+      <div class="flex justify-between items-start">
+        <div>
+          <h1 class="text-2xl font-semibold">Transaksi</h1>
+          <p class="text-white/80 mt-1">Catat dan kelola transaksi bisnismu</p>
+        </div>
+        <div class="flex space-x-3">
+          <button class="flex items-center space-x-2 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">
+            <span class="material-icons">calendar_today</span>
+            <span>Hari Ini</span>
+          </button>
+          <button class="flex items-center space-x-2 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">
+            <span class="material-icons">refresh</span>
+            <span>Refresh</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Form Transaksi -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Transaksi Baru</h2>
+          <form id="transactionForm" class="space-y-4">
+            <div>
+              <label for="transactionType" class="block text-sm font-medium text-gray-700 mb-1">Jenis Transaksi</label>
+              <select id="transactionType" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" required>
+                <option value="">Pilih Jenis Transaksi</option>
+                <option value="masuk">Pemasukan</option>
+                <option value="keluar">Pengeluaran</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="transactionDate" class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+              <input type="date" id="transactionDate" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" required>
+            </div>
+
+            <div>
+              <label for="productSelect" class="block text-sm font-medium text-gray-700 mb-1">Produk</label>
+              <select id="productSelect" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" required>
+                <option value="">Pilih Produk</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="quantity" class="block text-sm font-medium text-gray-700 mb-1">Jumlah</label>
+              <input type="number" id="quantity" min="1" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" required>
+            </div>
+
+            <div>
+              <label for="totalAmount" class="block text-sm font-medium text-gray-700 mb-1">Total (Rp)</label>
+              <input type="number" id="totalAmount" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-50" readonly>
+            </div>
+
+            <div>
+              <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
+              <textarea id="description" rows="3" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"></textarea>
+            </div>
+
+            <button type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors">
+              Simpan Transaksi
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Daftar Transaksi -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-lg font-semibold text-gray-800">Daftar Transaksi</h2>
+            <div class="flex items-center space-x-4">
+              <div class="flex items-center space-x-2">
+                <label class="text-sm text-gray-600">Filter:</label>
+                <select id="filterTransaksi" class="px-3 py-1 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                  <option value="today">Hari Ini</option>
+                  <option value="week">Minggu Ini</option>
+                  <option value="month">Bulan Ini</option>
+                  <option value="all">Semua</option>
+                </select>
+              </div>
+              <div class="relative">
+                <input type="text" id="searchTransaksi" placeholder="Cari transaksi..." class="pl-8 pr-4 py-1 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                <span class="material-icons absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">search</span>
+              </div>
+              <button id="clearAllTransaksi" class="px-4 py-1 bg-danger text-white rounded-lg text-sm hover:bg-danger/90 transition-colors">
+                Bersihkan Semua
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="min-w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produk</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="transaksiList" class="divide-y divide-gray-200">
+                <!-- Transaksi akan ditampilkan di sini -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Fungsi untuk mengambil produk dari localStorage
+    function getProducts() {
+      return JSON.parse(localStorage.getItem('produk')) || [];
+    }
+
+    // Fungsi untuk menyimpan transaksi ke localStorage
+    function saveTransaction(transaction) {
+      let transactions = JSON.parse(localStorage.getItem('transaksi')) || [];
+      transaction.id = Date.now();
+      transaction.date = new Date().toISOString(); // Simpan dalam format ISO string
+      transactions.push(transaction);
+      localStorage.setItem('transaksi', JSON.stringify(transactions));
+    }
+
+    // Fungsi untuk mengambil transaksi
+    function getTransactions() {
+      return JSON.parse(localStorage.getItem('transaksi')) || [];
+    }
+
+    // Fungsi untuk mengisi opsi produk
+    function populateProductOptions() {
+      const products = getProducts();
+      const select = document.getElementById('productSelect');
+      select.innerHTML = '<option value="">Pilih Produk</option>';
+      
+      products.forEach(product => {
+        const option = document.createElement('option');
+        option.value = product.id;
+        option.textContent = `${product.name} (Stok: ${product.stock})`;
+        option.dataset.price = product.price;
+        select.appendChild(option);
+      });
+    }
+
+    // Fungsi untuk menghitung total
+    function calculateTotal() {
+      const productId = document.getElementById('productSelect').value;
+      const quantity = document.getElementById('quantity').value;
+      const products = getProducts();
+      const product = products.find(p => p.id === parseInt(productId));
+      
+      if (product && quantity) {
+        const total = product.price * parseInt(quantity);
+        document.getElementById('totalAmount').value = total;
+      } else {
+        document.getElementById('totalAmount').value = '';
+      }
+    }
+
+    // Fungsi untuk mendapatkan tanggal awal berdasarkan filter
+    function getStartDate(filter) {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      switch(filter) {
+        case 'today':
+          return today; // Awal hari ini
+        case 'week':
+          const weekStart = new Date(today);
+          weekStart.setDate(today.getDate() - today.getDay());
+          return weekStart;
+        case 'month':
+          const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+          return monthStart;
+        case 'all':
+          return new Date(0); // Tanggal paling awal
+        default:
+          return today;
+      }
+    }
+
+    // Fungsi untuk memformat tanggal
+    function formatTanggal(dateString) {
+      const options = { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      };
+      return new Date(dateString).toLocaleDateString('id-ID', options);
+    }
+
+    // Fungsi untuk menampilkan transaksi
+    function tampilkanTransaksi() {
+      const transaksiList = document.getElementById('transaksiList');
+      const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
+      const produk = JSON.parse(localStorage.getItem('produk')) || [];
+      const filter = document.getElementById('filterTransaksi').value;
+      const searchTerm = document.getElementById('searchTransaksi').value.toLowerCase();
+      
+      // Filter transaksi berdasarkan tanggal dan pencarian
+      const startDate = getStartDate(filter);
+      const filteredTransaksi = transaksi.filter(t => {
+        const transaksiDate = new Date(t.date);
+        
+        let matchesDate = false;
+        if (filter === 'today') {
+          // Untuk 'Hari Ini', bandingkan tanggal saja
+          const todayStart = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+          const transaksiDay = new Date(transaksiDate.getFullYear(), transaksiDate.getMonth(), transaksiDate.getDate());
+          matchesDate = transaksiDay.getTime() === todayStart.getTime();
+        } else {
+          // Untuk filter lain, gunakan perbandingan >= startDate
+          matchesDate = transaksiDate >= startDate;
+        }
+
+        const produkItem = produk.find(p => p.id === t.productId) || { name: '' };
+        const matchesSearch = !searchTerm || 
+          produkItem.name.toLowerCase().includes(searchTerm) ||
+          t.type.toLowerCase().includes(searchTerm) ||
+          formatTanggal(t.date).toLowerCase().includes(searchTerm);
+        
+        return matchesDate && matchesSearch;
+      });
+
+      if (filteredTransaksi.length === 0) {
+        transaksiList.innerHTML = `
+          <tr>
+            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+              Tidak ada transaksi yang ditemukan
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      transaksiList.innerHTML = filteredTransaksi.map((t, index) => {
+        const produkItem = produk.find(p => p.id === t.productId) || { name: 'Produk tidak ditemukan' };
+        return `
+          <tr class="hover:bg-gray-50" data-transaksi-id="${t.id}">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatTanggal(t.date)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${produkItem.name}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${t.quantity}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatRupiah(t.total)}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${t.type === 'masuk' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                ${t.type === 'masuk' ? 'Pemasukan' : 'Pengeluaran'}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <button onclick="hapusTransaksi('${t.id}')" class="text-red-600 hover:text-red-900 flex items-center space-x-1">
+                <span class="material-icons text-sm">delete</span>
+                <span>Hapus</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Fungsi untuk menghapus transaksi
+    function hapusTransaksi(id) {
+      if (confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
+        let transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
+        const transaksiIndex = transaksi.findIndex(t => t.id === id);
+        
+        if (transaksiIndex !== -1) {
+          const transaksiHapus = transaksi[transaksiIndex];
+          
+          // Update stok produk
+          let produk = JSON.parse(localStorage.getItem('produk')) || [];
+          const produkIndex = produk.findIndex(p => p.id === transaksiHapus.productId);
+          
+          if (produkIndex !== -1) {
+            // Jika transaksi masuk, kurangi stok
+            // Jika transaksi keluar, tambah stok
+            const perubahanStok = transaksiHapus.type === 'masuk' ? -transaksiHapus.quantity : transaksiHapus.quantity;
+            produk[produkIndex].stock += perubahanStok;
+            
+            // Simpan perubahan stok
+            localStorage.setItem('produk', JSON.stringify(produk));
+          }
+          
+          // Hapus transaksi
+          transaksi.splice(transaksiIndex, 1);
+          localStorage.setItem('transaksi', JSON.stringify(transaksi));
+          
+          // Tampilkan notifikasi
+          tampilkanNotifikasi('Transaksi berhasil dihapus', 'success');
+          
+          // Update tampilan
+          tampilkanTransaksi();
+          updateRingkasan();
+        } else {
+          tampilkanNotifikasi('Transaksi tidak ditemukan', 'error');
+        }
+      }
+    }
+
+    // Fungsi untuk menampilkan notifikasi
+    function tampilkanNotifikasi(pesan, tipe = 'info') {
+      // Hapus notifikasi yang mungkin masih ada
+      const notifikasiLama = document.querySelector('.notifikasi');
+      if (notifikasiLama) {
+        notifikasiLama.remove();
+      }
+
+      const notifikasi = document.createElement('div');
+      notifikasi.className = `notifikasi fixed top-4 right-4 p-4 rounded-lg shadow-lg ${
+        tipe === 'success' ? 'bg-green-500' : 
+        tipe === 'error' ? 'bg-red-500' : 
+        'bg-blue-500'
+      } text-white z-50 transition-all duration-300 transform translate-x-full`;
+      
+      notifikasi.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <span class="material-icons">${tipe === 'success' ? 'check_circle' : tipe === 'error' ? 'error' : 'info'}</span>
+          <span>${pesan}</span>
+        </div>
+      `;
+      
+      document.body.appendChild(notifikasi);
+      
+      // Trigger animasi masuk
+      setTimeout(() => {
+        notifikasi.style.transform = 'translateX(0)';
+      }, 100);
+      
+      // Hapus notifikasi setelah 3 detik
+      setTimeout(() => {
+        notifikasi.style.transform = 'translateX(full)';
+        setTimeout(() => {
+          notifikasi.remove();
+        }, 300);
+      }, 3000);
+    }
+
+    // Fungsi untuk update ringkasan
+    function updateRingkasan() {
+      const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Hitung total pemasukan dan pengeluaran hari ini
+      const todayTransactions = transaksi.filter(t => new Date(t.date).toDateString() === new Date().toDateString());
+      const totalPemasukan = todayTransactions
+        .filter(t => t.type === 'masuk')
+        .reduce((acc, curr) => acc + curr.total, 0);
+      const totalPengeluaran = todayTransactions
+        .filter(t => t.type === 'keluar')
+        .reduce((acc, curr) => acc + curr.total, 0);
+      
+      // Update tampilan ringkasan
+      document.getElementById('totalPemasukan').textContent = formatRupiah(totalPemasukan);
+      document.getElementById('totalPengeluaran').textContent = formatRupiah(totalPengeluaran);
+      document.getElementById('saldoHariIni').textContent = formatRupiah(totalPemasukan - totalPengeluaran);
+    }
+
+    // Event listener untuk form submit
+    document.getElementById('transactionForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const transaction = {
+        type: document.getElementById('transactionType').value,
+        date: document.getElementById('transactionDate').value,
+        productId: parseInt(document.getElementById('productSelect').value),
+        quantity: parseInt(document.getElementById('quantity').value),
+        total: parseInt(document.getElementById('totalAmount').value),
+        description: document.getElementById('description').value
+      };
+
+      // Update stok produk
+      const products = getProducts();
+      const productIndex = products.findIndex(p => p.id === transaction.productId);
+      
+      if (productIndex !== -1) {
+        if (transaction.type === 'masuk') {
+          products[productIndex].stock += transaction.quantity;
+        } else {
+          if (products[productIndex].stock < transaction.quantity) {
+            alert('Stok tidak mencukupi!');
+            return;
+          }
+          products[productIndex].stock -= transaction.quantity;
+        }
+        localStorage.setItem('produk', JSON.stringify(products));
+      }
+
+      saveTransaction(transaction);
+      this.reset();
+      populateProductOptions();
+      tampilkanTransaksi();
+      alert('Transaksi berhasil disimpan!');
+    });
+
+    // Event listener untuk perubahan produk dan jumlah
+    document.getElementById('productSelect').addEventListener('change', calculateTotal);
+    document.getElementById('quantity').addEventListener('input', calculateTotal);
+
+    // Event listener untuk filter dan pencarian
+    document.addEventListener('DOMContentLoaded', () => {
+      // Event listener untuk filter
+      document.getElementById('filterTransaksi').addEventListener('change', tampilkanTransaksi);
+      
+      // Event listener untuk pencarian
+      document.getElementById('searchTransaksi').addEventListener('input', tampilkanTransaksi);
+      
+      // Event listener untuk tombol bersihkan semua
+      document.getElementById('clearAllTransaksi').addEventListener('click', clearAllTransaksi);
+      
+      // Tampilkan transaksi saat halaman dimuat
+      tampilkanTransaksi();
+      updateRingkasan();
+
+      // Tambahkan event listener untuk semua link di sidebar
+      document.querySelectorAll('nav a').forEach(link => {
+        link.addEventListener('click', function(e) {
+          // Hapus class active dari semua link
+          document.querySelectorAll('nav a').forEach(l => {
+            l.classList.remove('bg-white/20');
+          });
+          // Tambahkan class active ke link yang diklik
+          this.classList.add('bg-white/20');
+        });
+      });
+    });
+
+    // Set tanggal default ke hari ini
+    document.getElementById('transactionDate').valueAsDate = new Date();
+
+    // Inisialisasi halaman
+    populateProductOptions();
+    tampilkanTransaksi();
+
+    // Fungsi untuk membersihkan semua transaksi
+    function clearAllTransaksi() {
+      if (confirm('Apakah Anda yakin ingin menghapus SEMUA transaksi? Tindakan ini tidak bisa dibatalkan.')) {
+        localStorage.removeItem('transaksi');
+        tampilkanTransaksi(); // Refresh tampilan
+        updateRingkasan(); // Update ringkasan
+        tampilkanNotifikasi('Semua transaksi berhasil dibersihkan', 'success');
+      }
+    }
+
+    // Fungsi untuk mengecek status login
+    function checkAuth() {
+      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+      if (!currentUser) {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Update nama pengguna di header jika ada
+      const userNameElement = document.querySelector('[data-user="name"]');
+      if (userNameElement) {
+        userNameElement.textContent = currentUser.name || currentUser.email;
+      }
+    }
+
+    // Fungsi untuk logout
+    function handleLogout() {
+      localStorage.removeItem('currentUser');
+      window.location.href = 'login.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Cek status login
+      checkAuth();
+
+      // Event listener untuk tombol logout
+      const logoutButton = document.querySelector('button');
+      if (logoutButton) {
+        logoutButton.addEventListener('click', handleLogout);
+      }
+
+      // Kode lainnya tetap sama
+      // ... existing code ...
+    });
+  </script>
+</body>
+</html> 

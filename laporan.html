@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KeuTrack - Laporan Keuangan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Poppins', 'sans-serif'],
+          },
+          colors: {
+            primary: '#2c3e50',
+            secondary: '#64748b',
+            success: '#10B981',
+            warning: '#F59E0B',
+            danger: '#EF4444',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-50 font-sans">
+  <!-- Sidebar -->
+  <div class="fixed inset-y-0 left-0 w-64 bg-primary text-white">
+    <div class="p-6">
+      <div class="flex items-center space-x-4">
+        <img src="./images/LOGO KT.svg" alt="KeuTrack Logo" class="w-[70px] h-[70px]">
+        <span class="text-2xl font-semibold mt-1">KeuTrack</span>
+      </div>
+    </div>
+    <nav class="mt-6">
+      <ul class="space-y-2 px-4">
+        <li>
+          <a href="dashboard.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">dashboard</span>
+            <span>Dasbor</span>
+          </a>
+        </li>
+        <li>
+          <a href="produk.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">inventory_2</span>
+            <span>Produk/Item</span>
+          </a>
+        </li>
+        <li>
+          <a href="transaksi.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">swap_horiz</span>
+            <span>Transaksi</span>
+          </a>
+        </li>
+        <li class="active">
+          <a href="laporan.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-white/20">
+            <span class="material-icons">bar_chart</span>
+            <span>Laporan Keuangan</span>
+          </a>
+        </li>
+        <li>
+          <a href="riwayat-transaksi.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">history</span>
+            <span>Riwayat Transaksi</span>
+          </a>
+        </li>
+        <li>
+          <a href="export.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">cloud_download</span>
+            <span>Export/Backup</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="absolute bottom-0 w-full p-4">
+      <button class="flex items-center space-x-3 w-full px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+        <span class="material-icons">logout</span>
+        <span>Log Out</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="ml-64 p-8">
+    <!-- Header -->
+    <div class="bg-primary text-white rounded-lg p-6 mb-8">
+      <h1 class="text-2xl font-semibold">Laporan Keuangan</h1>
+      <p class="text-white/80 mt-1">Lihat berbagai laporan keuangan bisnismu</p>
+    </div>
+
+    <!-- Filter Tanggal -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Filter Laporan</h2>
+      <div class="flex flex-wrap items-center gap-4">
+        <div>
+          <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai:</label>
+          <input type="date" id="startDate" class="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors">
+        </div>
+        <div>
+          <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir:</label>
+          <input type="date" id="endDate" class="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors">
+        </div>
+        <button id="applyFilter" class="mt-5 bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors focus:ring-2 focus:ring-primary/20">
+          Tampilkan Laporan
+        </button>
+      </div>
+    </div>
+
+    <!-- Ringkasan Laba Rugi -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Ringkasan Laba Rugi</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="border p-4 rounded-lg">
+          <h3 class="text-sm font-medium text-gray-500">Total Pemasukan</h3>
+          <p id="reportTotalPemasukan" class="text-xl font-semibold text-green-600">Rp 0</p>
+        </div>
+        <div class="border p-4 rounded-lg">
+          <h3 class="text-sm font-medium text-gray-500">Total Pengeluaran</h3>
+          <p id="reportTotalPengeluaran" class="text-xl font-semibold text-red-600">Rp 0</p>
+        </div>
+        <div class="border p-4 rounded-lg">
+          <h3 class="text-sm font-medium text-gray-500">Laba/Rugi</h3>
+          <p id="reportLabaRugi" class="text-xl font-semibold text-blue-600">Rp 0</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grafik Tren Keuangan -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Grafik Tren Keuangan</h2>
+      <div class="h-80">
+        <canvas id="reportFinanceChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Laporan Penjualan Produk -->
+    <div class="bg-white rounded-lg shadow-sm p-6">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Laporan Penjualan Produk</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full bg-white rounded-lg overflow-hidden">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Produk</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Terjual</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Pendapatan</th>
+            </tr>
+          </thead>
+          <tbody id="productSalesTableBody" class="divide-y divide-gray-200">
+            <!-- Data penjualan produk akan ditampilkan di sini -->
+          </tbody>
+        </table>
+        <div id="noProductSalesData" class="text-center text-gray-500 mt-4 hidden">Tidak ada data penjualan produk dalam periode ini.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Fungsi untuk format mata uang
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR'
+      }).format(amount);
+    }
+
+    // Fungsi untuk mengambil transaksi dari localStorage
+    function getTransactions() {
+      return JSON.parse(localStorage.getItem('transaksi')) || [];
+    }
+
+    // Fungsi untuk mengambil produk dari localStorage
+    function getProducts() {
+      return JSON.parse(localStorage.getItem('produk')) || [];
+    }
+
+    // Fungsi untuk menampilkan laporan
+    function generateReport(startDate, endDate) {
+      const transactions = getTransactions();
+      const products = getProducts();
+
+      // Filter transaksi berdasarkan tanggal
+      const filteredTransactions = transactions.filter(t => {
+        const transactionDate = new Date(t.date);
+        // Normalize dates to compare only the date part
+        const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+        const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+        const trans = new Date(transactionDate.getFullYear(), transactionDate.getMonth(), transactionDate.getDate());
+        
+        return trans >= start && trans <= end;
+      });
+
+      // Hitung Ringkasan Laba Rugi
+      const totalPemasukan = filteredTransactions
+        .filter(t => t.type === 'masuk')
+        .reduce((acc, curr) => acc + curr.total, 0);
+
+      const totalPengeluaran = filteredTransactions
+        .filter(t => t.type === 'keluar')
+        .reduce((acc, curr) => acc + curr.total, 0);
+
+      const labaRugi = totalPemasukan - totalPengeluaran;
+
+      document.getElementById('reportTotalPemasukan').textContent = formatCurrency(totalPemasukan);
+      document.getElementById('reportTotalPengeluaran').textContent = formatCurrency(totalPengeluaran);
+      document.getElementById('reportLabaRugi').textContent = formatCurrency(labaRugi);
+
+      // Generate data untuk Grafik Tren Keuangan (contoh sederhana per hari)
+      const dailyData = {};
+      filteredTransactions.forEach(t => {
+        const date = new Date(t.date).toISOString().split('T')[0];
+        if (!dailyData[date]) {
+          dailyData[date] = { pemasukan: 0, pengeluaran: 0 };
+        }
+        if (t.type === 'masuk') {
+          dailyData[date].pemasukan += t.total;
+        } else {
+          dailyData[date].pengeluaran += t.total;
+        }
+      });
+
+      const sortedDates = Object.keys(dailyData).sort();
+      const chartLabels = sortedDates.map(dateString => new Date(dateString).toLocaleDateString('id-ID'));
+      const chartPemasukanData = sortedDates.map(date => dailyData[date].pemasukan);
+      const chartPengeluaranData = sortedDates.map(date => dailyData[date].pengeluaran);
+
+      // Update atau buat grafik
+      const ctx = document.getElementById('reportFinanceChart').getContext('2d');
+      // Destroy existing chart if it exists
+      if (window.reportFinanceChartInstance) {
+        window.reportFinanceChartInstance.destroy();
+      }
+      window.reportFinanceChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: chartLabels,
+          datasets: [
+            {
+              label: 'Pemasukan',
+              data: chartPemasukanData,
+              borderColor: '#10B981',
+              backgroundColor: '#10B98120',
+              tension: 0.4,
+              fill: true
+            },
+            {
+              label: 'Pengeluaran',
+              data: chartPengeluaranData,
+              borderColor: '#EF4444',
+              backgroundColor: '#EF444420',
+              tension: 0.4,
+              fill: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  if (context.parsed.y !== null) {
+                    label += formatCurrency(context.parsed.y);
+                  }
+                  return label;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return formatCurrency(value).replace('Rp', '').trim(); // Clean up for axis
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Generate Laporan Penjualan Produk
+      const productSales = {};
+      filteredTransactions
+        .filter(t => t.type === 'masuk' && t.productId) // Hanya transaksi pemasukan dengan produk
+        .forEach(t => {
+          const productId = t.productId;
+          const quantity = t.quantity;
+          const total = t.total;
+
+          if (!productSales[productId]) {
+            productSales[productId] = { quantity: 0, total: 0 };
+          }
+          productSales[productId].quantity += quantity;
+          productSales[productId].total += total;
+        });
+
+      const productSalesTableBody = document.getElementById('productSalesTableBody');
+      productSalesTableBody.innerHTML = '';
+      const noProductSalesData = document.getElementById('noProductSalesData');
+
+      const sortedProductIds = Object.keys(productSales).sort((a, b) => productSales[b].total - productSales[a].total); // Urutkan berdasarkan total pendapatan
+
+      if (sortedProductIds.length === 0) {
+        noProductSalesData.classList.remove('hidden');
+      } else {
+        noProductSalesData.classList.add('hidden');
+        sortedProductIds.forEach(productId => {
+          const product = products.find(p => p.id === parseInt(productId));
+          if (product) {
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-gray-50';
+            tr.innerHTML = `
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${product.name}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${productSales[productId].quantity}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatCurrency(productSales[productId].total)}</td>
+            `;
+            productSalesTableBody.appendChild(tr);
+          }
+        });
+      }
+    }
+
+    // Event listener untuk tombol Tampilkan Laporan
+    document.getElementById('applyFilter').addEventListener('click', () => {
+      const startDateInput = document.getElementById('startDate').value;
+      const endDateInput = document.getElementById('endDate').value;
+
+      if (startDateInput && endDateInput) {
+        const startDate = new Date(startDateInput);
+        const endDate = new Date(endDateInput);
+        generateReport(startDate, endDate);
+      } else {
+        alert('Mohon pilih tanggal mulai dan tanggal akhir.');
+      }
+    });
+
+    // Generate laporan untuk bulan ini saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', () => {
+      const today = new Date();
+      const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      
+      // Set default filter tanggal ke bulan ini
+      document.getElementById('startDate').value = firstDayOfMonth.toISOString().split('T')[0];
+      document.getElementById('endDate').value = lastDayOfMonth.toISOString().split('T')[0];
+
+      generateReport(firstDayOfMonth, lastDayOfMonth);
+
+      // Tambahkan event listener untuk semua link di sidebar
+      document.querySelectorAll('nav a').forEach(link => {
+        link.addEventListener('click', function(e) {
+          // Hapus class active dari semua link
+          document.querySelectorAll('nav a').forEach(l => {
+            l.classList.remove('bg-white/20');
+          });
+          // Tambahkan class active ke link yang diklik
+          this.classList.add('bg-white/20');
+        });
+      });
+
+      // Fungsi untuk mengecek status login
+      function checkAuth() {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+          window.location.href = 'login.html';
+          return;
+        }
+        
+        // Update nama pengguna di header jika ada
+        const userNameElement = document.querySelector('[data-user="name"]');
+        if (userNameElement) {
+          userNameElement.textContent = currentUser.name || currentUser.email;
+        }
+      }
+
+      // Fungsi untuk logout
+      function handleLogout() {
+        localStorage.removeItem('currentUser');
+        window.location.href = 'login.html';
+      }
+
+      // Cek status login
+      checkAuth();
+
+      // Event listener untuk tombol logout
+      const logoutButton = document.querySelector('button');
+      if (logoutButton) {
+        logoutButton.addEventListener('click', handleLogout);
+      }
+    });
+
+  </script>
+</body>
+</html> 

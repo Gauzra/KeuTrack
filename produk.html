@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KeuTrack - Manajemen Produk</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Poppins', 'sans-serif'],
+          },
+          colors: {
+            primary: '#2c3e50',
+            secondary: '#64748b',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-50 font-sans">
+  <!-- Sidebar -->
+  <div class="fixed inset-y-0 left-0 w-64 bg-primary text-white">
+    <div class="p-6">
+      <div class="flex items-center space-x-4">
+        <img src="./images/LOGO KT.svg" alt="KeuTrack Logo" class="w-[70px] h-[70px]">
+        <span class="text-2xl font-semibold mt-1">KeuTrack</span>
+      </div>
+    </div>
+    <nav class="mt-6">
+      <ul class="space-y-2 px-4">
+        <li>
+          <a href="dashboard.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">dashboard</span>
+            <span>Dasbor</span>
+          </a>
+        </li>
+        <li>
+          <a href="produk.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-white/20">
+            <span class="material-icons">inventory_2</span>
+            <span>Produk/Item</span>
+          </a>
+        </li>
+        <li>
+          <a href="transaksi.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">swap_horiz</span>
+            <span>Transaksi</span>
+          </a>
+        </li>
+        <li>
+          <a href="laporan.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">bar_chart</span>
+            <span>Laporan Keuangan</span>
+          </a>
+        </li>
+        <li>
+          <a href="riwayat-transaksi.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">history</span>
+            <span>Riwayat Transaksi</span>
+          </a>
+        </li>
+        <li>
+          <a href="export.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">cloud_download</span>
+            <span>Export/Backup</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="absolute bottom-0 w-full p-4">
+      <button class="flex items-center space-x-3 w-full px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+        <span class="material-icons">logout</span>
+        <span>Log Out</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="ml-64 p-8">
+    <!-- Header -->
+    <div class="bg-primary text-white rounded-lg p-6 mb-8">
+      <h1 class="text-2xl font-semibold">Manajemen Produk</h1>
+      <p class="text-white/80 mt-1">Kelola produk dan stok barang Anda</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Form Input -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-6">Tambah Produk Baru</h2>
+        <form id="productForm" class="space-y-4">
+          <div>
+            <label for="productName" class="block text-sm font-medium text-gray-700 mb-1">Nama Produk</label>
+            <input type="text" id="productName" required
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors">
+          </div>
+          
+          <div>
+            <label for="productPrice" class="block text-sm font-medium text-gray-700 mb-1">Harga Satuan (Rp)</label>
+            <input type="number" id="productPrice" required min="0"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors">
+          </div>
+          
+          <div>
+            <label for="productStock" class="block text-sm font-medium text-gray-700 mb-1">Stok Awal</label>
+            <input type="number" id="productStock" required min="0"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors">
+          </div>
+          
+          <div>
+            <label for="productCategory" class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+            <select id="productCategory"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors">
+              <option value="">Pilih Kategori</option>
+              <option value="makanan">Makanan</option>
+              <option value="minuman">Minuman</option>
+              <option value="snack">Snack</option>
+              <option value="lainnya">Lainnya</option>
+            </select>
+          </div>
+
+          <button type="submit" 
+            class="w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors focus:ring-2 focus:ring-primary/20">
+            Tambah Produk
+          </button>
+        </form>
+      </div>
+
+      <!-- Table -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-semibold text-gray-800">Daftar Produk</h2>
+          <div class="flex space-x-3">
+            <div class="relative">
+              <input type="text" id="searchProduct" placeholder="Cari produk..."
+                class="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors">
+              <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+            </div>
+            <select id="filterCategory"
+              class="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors">
+              <option value="">Semua Kategori</option>
+              <option value="makanan">Makanan</option>
+              <option value="minuman">Minuman</option>
+              <option value="snack">Snack</option>
+              <option value="lainnya">Lainnya</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="bg-gray-50">
+                <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Nama Produk</th>
+                <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Harga</th>
+                <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Stok</th>
+                <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Kategori</th>
+                <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="productTableBody" class="divide-y divide-gray-200">
+              <!-- Data produk akan ditampilkan di sini -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Fungsi untuk menyimpan produk ke localStorage
+    function saveProduct(product) {
+      let products = JSON.parse(localStorage.getItem('products')) || [];
+      product.id = Date.now();
+      products.push(product);
+      localStorage.setItem('products', JSON.stringify(products));
+    }
+
+    // Fungsi untuk mengambil semua produk
+    function getProducts() {
+      return JSON.parse(localStorage.getItem('products')) || [];
+    }
+
+    // Fungsi untuk menampilkan produk di tabel
+    function displayProducts(products) {
+      const tbody = document.getElementById('productTableBody');
+      tbody.innerHTML = '';
+      
+      products.forEach(product => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-50 transition-colors';
+        tr.innerHTML = `
+          <td class="px-4 py-3 text-sm text-gray-900">${product.name}</td>
+          <td class="px-4 py-3 text-sm text-gray-900">Rp ${product.price.toLocaleString('id-ID')}</td>
+          <td class="px-4 py-3 text-sm text-gray-900">${product.stock}</td>
+          <td class="px-4 py-3 text-sm text-gray-900">${product.category || '-'}</td>
+          <td class="px-4 py-3 text-sm">
+            <div class="flex space-x-2">
+              <button onclick="editProduct(${product.id})" 
+                class="p-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                <span class="material-icons text-lg">edit</span>
+              </button>
+              <button onclick="deleteProduct(${product.id})"
+                class="p-1 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                <span class="material-icons text-lg">delete</span>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Event listener untuk form submit
+    document.getElementById('productForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const product = {
+        name: document.getElementById('productName').value,
+        price: parseInt(document.getElementById('productPrice').value),
+        stock: parseInt(document.getElementById('productStock').value),
+        category: document.getElementById('productCategory').value
+      };
+
+      saveProduct(product);
+      this.reset();
+      displayProducts(getProducts());
+      
+      // Tampilkan notifikasi sukses
+      const notification = document.createElement('div');
+      notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-0 opacity-100 transition-all duration-300';
+      notification.textContent = 'Produk berhasil ditambahkan!';
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => notification.remove(), 300);
+      }, 2000);
+    });
+
+    // Event listener untuk pencarian
+    document.getElementById('searchProduct').addEventListener('input', function(e) {
+      const searchTerm = e.target.value.toLowerCase();
+      const products = getProducts().filter(product => 
+        product.name.toLowerCase().includes(searchTerm)
+      );
+      displayProducts(products);
+    });
+
+    // Event listener untuk filter kategori
+    document.getElementById('filterCategory').addEventListener('change', function(e) {
+      const category = e.target.value;
+      let products = getProducts();
+      
+      if (category) {
+        products = products.filter(product => product.category === category);
+      }
+      
+      displayProducts(products);
+    });
+
+    // Fungsi untuk menghapus produk
+    function deleteProduct(id) {
+      if (confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
+        let products = getProducts();
+        products = products.filter(product => product.id !== id);
+        localStorage.setItem('products', JSON.stringify(products));
+        displayProducts(products);
+      }
+    }
+
+    // Fungsi untuk mengedit produk
+    function editProduct(id) {
+      const products = getProducts();
+      const product = products.find(p => p.id === id);
+      
+      if (product) {
+        document.getElementById('productName').value = product.name;
+        document.getElementById('productPrice').value = product.price;
+        document.getElementById('productStock').value = product.stock;
+        document.getElementById('productCategory').value = product.category || '';
+        
+        // Hapus produk lama
+        deleteProduct(id);
+      }
+    }
+
+    // Tampilkan produk saat halaman dimuat
+    displayProducts(getProducts());
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      // ... existing code ...
+
+      // Tambahkan event listener untuk semua link di sidebar
+      document.querySelectorAll('nav a').forEach(link => {
+        link.addEventListener('click', function(e) {
+          // Hapus class active dari semua link
+          document.querySelectorAll('nav a').forEach(l => {
+            l.classList.remove('bg-white/20');
+          });
+          // Tambahkan class active ke link yang diklik
+          this.classList.add('bg-white/20');
+        });
+      });
+
+      // Fungsi untuk mengecek status login
+      checkAuth();
+
+      // Event listener untuk tombol logout
+      const logoutButton = document.querySelector('button');
+      if (logoutButton) {
+        logoutButton.addEventListener('click', handleLogout);
+      }
+    });
+
+    // Fungsi untuk mengecek status login
+    function checkAuth() {
+      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+      if (!currentUser) {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Update nama pengguna di header jika ada
+      const userNameElement = document.querySelector('[data-user="name"]');
+      if (userNameElement) {
+        userNameElement.textContent = currentUser.name || currentUser.email;
+      }
+    }
+
+    // Fungsi untuk logout
+    function handleLogout() {
+      localStorage.removeItem('currentUser');
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html> 
