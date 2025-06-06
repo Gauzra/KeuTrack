@@ -102,6 +102,27 @@
     .profile-image-upload:hover {
       background: #1a2530;
     }
+    /* Dark theme styles */
+    .dark-theme {
+      background-color: #1a1a1a;
+      color: #ffffff;
+    }
+    .dark-theme .bg-white {
+      background-color: #2d2d2d;
+      color: #ffffff;
+    }
+    .dark-theme .text-gray-700 {
+      color: #e0e0e0;
+    }
+    .dark-theme .text-gray-500 {
+      color: #a0a0a0;
+    }
+    .dark-theme .border-gray-300 {
+      border-color: #404040;
+    }
+    .dark-theme .hover\:bg-white\/10:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
   </style>
 </head>
 <body class="bg-gray-50 font-sans">
@@ -134,45 +155,51 @@
         <li>
           <a href="dashboard.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
             <span class="material-icons">dashboard</span>
-            <span>Dasbor</span>
+            <span data-translate="dashboard">Dasbor</span>
           </a>
         </li>
         <li>
           <a href="produk.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
             <span class="material-icons">inventory_2</span>
-            <span>Produk/Item</span>
+            <span data-translate="products">Produk/Item</span>
           </a>
         </li>
         <li>
           <a href="transaksi.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
             <span class="material-icons">swap_horiz</span>
-            <span>Transaksi</span>
+            <span data-translate="transactions">Transaksi</span>
           </a>
         </li>
         <li>
           <a href="laporan.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
             <span class="material-icons">bar_chart</span>
-            <span>Laporan Keuangan</span>
+            <span data-translate="reports">Laporan Keuangan</span>
           </a>
         </li>
         <li>
           <a href="riwayat-transaksi.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
             <span class="material-icons">history</span>
-            <span>Riwayat Transaksi</span>
+            <span data-translate="history">Riwayat Transaksi</span>
           </a>
         </li>
         <li>
           <a href="export.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
             <span class="material-icons">cloud_download</span>
-            <span>Export/Backup</span>
+            <span data-translate="export">Export/Backup</span>
+          </a>
+        </li>
+        <li>
+          <a href="profil.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">person</span>
+            <span data-translate="profile">Profil</span>
           </a>
         </li>
       </ul>
     </nav>
     <div class="absolute bottom-0 w-full p-4">
-      <button onclick="handleLogout()" class="flex items-center space-x-3 w-full px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+      <button id="logoutButton" class="flex items-center space-x-3 w-full px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
         <span class="material-icons">logout</span>
-        <span>Log Out</span>
+        <span data-translate="logout">Log Out</span>
       </button>
     </div>
   </div>
@@ -183,7 +210,7 @@
     <div class="bg-primary text-white rounded-lg p-4 lg:p-6 mb-6 lg:mb-8">
       <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start space-y-4 lg:space-y-0">
         <div>
-          <h1 class="text-xl lg:text-2xl font-semibold">Profil</h1>
+          <h1 class="text-xl lg:text-2xl font-semibold" data-translate="profile">Profil</h1>
           <p class="text-white/80 mt-1 text-sm lg:text-base">Informasi profil pengguna</p>
         </div>
       </div>
@@ -227,28 +254,27 @@
         <div class="bg-white rounded-lg shadow-sm p-6">
           <div class="space-y-6">
             <div>
-              <h3 class="text-lg font-semibold mb-4">Preferensi</h3>
+              <h3 class="text-lg font-semibold mb-4" data-translate="preferences">Preferensi</h3>
               <div class="space-y-4">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Bahasa</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="language">Bahasa</label>
                   <select id="language" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
                     <option value="id">Indonesia</option>
                     <option value="en">English</option>
                   </select>
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Tema</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="theme">Tema</label>
                   <select id="theme" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
                     <option value="light">Light</option>
                     <option value="dark">Dark</option>
                   </select>
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Format Tanggal</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="dateFormat">Format Tanggal</label>
                   <select id="dateFormat" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
                     <option value="DD/MM/YYYY">DD/MM/YYYY</option>
                     <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                    <option value="YYYY-MM-DD">YYYY-MM-DD</option>
                   </select>
                 </div>
                 <div>
@@ -378,19 +404,162 @@
       alert('Preferensi berhasil disimpan!');
     }
 
-    // Handle logout
+    // Fungsi untuk menangani logout
     function handleLogout() {
       if (confirm('Apakah Anda yakin ingin keluar?')) {
-        // Hapus data user
         localStorage.removeItem('currentUser');
-        // Redirect ke halaman login
         window.location.href = 'login.html';
       }
     }
 
-    // Panggil fungsi load data saat halaman dimuat
+    // Fungsi untuk memuat preferensi pengguna
+    function loadUserPreferences() {
+      const preferences = JSON.parse(localStorage.getItem('userPreferences')) || {
+        language: 'id',
+        theme: 'light',
+        dateFormat: 'DD/MM/YYYY'
+      };
+
+      // Set nilai default untuk select
+      document.getElementById('language').value = preferences.language;
+      document.getElementById('theme').value = preferences.theme;
+      document.getElementById('dateFormat').value = preferences.dateFormat;
+
+      // Terapkan tema
+      applyTheme(preferences.theme);
+    }
+
+    // Fungsi untuk menyimpan preferensi pengguna
+    function saveUserPreferences() {
+      const preferences = {
+        language: document.getElementById('language').value,
+        theme: document.getElementById('theme').value,
+        dateFormat: document.getElementById('dateFormat').value
+      };
+
+      localStorage.setItem('userPreferences', JSON.stringify(preferences));
+      
+      // Terapkan perubahan
+      applyTheme(preferences.theme);
+      applyLanguage(preferences.language);
+      
+      // Tampilkan notifikasi
+      showNotification('Preferensi berhasil disimpan', 'success');
+    }
+
+    // Fungsi untuk menerapkan tema
+    function applyTheme(theme) {
+      const body = document.body;
+      if (theme === 'dark') {
+        body.classList.add('dark-theme');
+        body.classList.remove('light-theme');
+      } else {
+        body.classList.add('light-theme');
+        body.classList.remove('dark-theme');
+      }
+    }
+
+    // Fungsi untuk menerapkan bahasa
+    function applyLanguage(language) {
+      // Terjemahkan elemen-elemen UI
+      const translations = {
+        id: {
+          dashboard: 'Dasbor',
+          products: 'Produk/Item',
+          transactions: 'Transaksi',
+          reports: 'Laporan Keuangan',
+          history: 'Riwayat Transaksi',
+          export: 'Export/Backup',
+          profile: 'Profil',
+          logout: 'Log Out',
+          preferences: 'Preferensi',
+          language: 'Bahasa',
+          theme: 'Tema',
+          dateFormat: 'Format Tanggal'
+        },
+        en: {
+          dashboard: 'Dashboard',
+          products: 'Products/Items',
+          transactions: 'Transactions',
+          reports: 'Financial Reports',
+          history: 'Transaction History',
+          export: 'Export/Backup',
+          profile: 'Profile',
+          logout: 'Log Out',
+          preferences: 'Preferences',
+          language: 'Language',
+          theme: 'Theme',
+          dateFormat: 'Date Format'
+        }
+      };
+
+      // Update teks UI
+      const elements = document.querySelectorAll('[data-translate]');
+      elements.forEach(element => {
+        const key = element.getAttribute('data-translate');
+        if (translations[language][key]) {
+          element.textContent = translations[language][key];
+        }
+      });
+    }
+
+    // Fungsi untuk menampilkan notifikasi
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 
+        'bg-blue-500'
+      } text-white z-50 transition-all duration-300 transform translate-x-full`;
+      
+      notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <span class="material-icons">${type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info'}</span>
+          <span>${message}</span>
+        </div>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Trigger animasi masuk
+      setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+      }, 100);
+      
+      // Hapus notifikasi setelah 3 detik
+      setTimeout(() => {
+        notification.style.transform = 'translateX(full)';
+        setTimeout(() => {
+          notification.remove();
+        }, 300);
+      }, 3000);
+    }
+
+    // Event listener untuk perubahan preferensi
     document.addEventListener('DOMContentLoaded', () => {
-      loadUserData();
+      // Load preferensi saat halaman dimuat
+      loadUserPreferences();
+
+      // Event listener untuk perubahan bahasa
+      document.getElementById('language').addEventListener('change', function() {
+        saveUserPreferences();
+      });
+
+      // Event listener untuk perubahan tema
+      document.getElementById('theme').addEventListener('change', function() {
+        saveUserPreferences();
+      });
+
+      // Event listener untuk perubahan format tanggal
+      document.getElementById('dateFormat').addEventListener('change', function() {
+        saveUserPreferences();
+      });
+
+      // Event listener untuk tombol logout
+      const logoutButton = document.getElementById('logoutButton');
+      if (logoutButton) {
+        logoutButton.addEventListener('click', handleLogout);
+      }
     });
   </script>
 </body>

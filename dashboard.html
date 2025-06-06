@@ -160,7 +160,7 @@
       </ul>
     </nav>
     <div class="absolute bottom-0 w-full p-4">
-      <button class="flex items-center space-x-3 w-full px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+      <button id="logoutButton" class="flex items-center space-x-3 w-full px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
         <span class="material-icons">logout</span>
         <span>Log Out</span>
       </button>
@@ -360,6 +360,58 @@
       overlay.classList.add('hidden');
     });
 
+    // Fungsi untuk menangani logout
+    function handleLogout() {
+      if (confirm('Apakah Anda yakin ingin keluar?')) {
+        localStorage.removeItem('currentUser');
+        window.location.href = 'login.html';
+      }
+    }
+
+    // Fungsi untuk memuat data dashboard
+    function loadDashboardData() {
+      showLoading();
+      
+      // Ambil data dari localStorage
+      const transactions = JSON.parse(localStorage.getItem('transaksi')) || [];
+      const products = JSON.parse(localStorage.getItem('products')) || [];
+      
+      // Hitung statistik
+      const today = new Date().toISOString().split('T')[0];
+      const todayTransactions = transactions.filter(t => t.date.startsWith(today));
+      
+      const totalIncome = todayTransactions
+        .filter(t => t.type === 'masuk')
+        .reduce((sum, t) => sum + t.total, 0);
+        
+      const totalExpense = todayTransactions
+        .filter(t => t.type === 'keluar')
+        .reduce((sum, t) => sum + t.total, 0);
+        
+      const totalBalance = totalIncome - totalExpense;
+      
+      // Update tampilan
+      document.querySelector('[data-stat="balance"]').textContent = formatRupiah(totalBalance);
+      document.querySelector('[data-stat="income"]').textContent = formatRupiah(totalIncome);
+      document.querySelector('[data-stat="expense"]').textContent = formatRupiah(totalExpense);
+      document.querySelector('[data-stat="transactions"]').textContent = todayTransactions.length;
+      
+      // Cek dan tampilkan notifikasi
+      checkNotifications(products, transactions, totalBalance);
+      
+      hideLoading();
+    }
+
+    // Fungsi untuk memformat angka ke format Rupiah
+    function formatRupiah(angka) {
+      return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(angka);
+    }
+
     // Fungsi untuk menampilkan loading
     function showLoading() {
       document.getElementById('loadingOverlay').classList.add('active');
@@ -370,129 +422,163 @@
       document.getElementById('loadingOverlay').classList.remove('active');
     }
 
-    // Fungsi untuk memuat data dashboard
-    async function loadDashboardData() {
-      try {
-        showLoading();
-        
-        // Simulasi delay loading data
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Load data dari localStorage
-        const produk = JSON.parse(localStorage.getItem('produk')) || [];
-        const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
-        
-        // Update card data
-        const totalProduk = produk.length;
-        const totalTransaksi = transaksi.length;
-        
-        // Hitung total pendapatan dan pengeluaran
-        const totalPendapatan = transaksi.reduce((total, t) => {
-          return total + (t.jenis === 'masuk' ? t.jumlah : 0);
-        }, 0);
-        
-        const totalPengeluaran = transaksi.reduce((total, t) => {
-          return total + (t.jenis === 'keluar' ? t.jumlah : 0);
-        }, 0);
-        
-        // Update statistik
-        document.querySelector('[data-stat="balance"]').textContent = `Rp ${(totalPendapatan - totalPengeluaran).toLocaleString('id-ID')}`;
-        document.querySelector('[data-stat="income"]').textContent = `Rp ${totalPendapatan.toLocaleString('id-ID')}`;
-        document.querySelector('[data-stat="expense"]').textContent = `Rp ${totalPengeluaran.toLocaleString('id-ID')}`;
-        document.querySelector('[data-stat="transactions"]').textContent = totalTransaksi;
-        
-        // Update persentase perubahan
-        const incomeChange = ((totalPendapatan - (totalPendapatan * 0.95)) / (totalPendapatan * 0.95) * 100).toFixed(1);
-        document.querySelector('[data-stat="income-change"]').textContent = `${incomeChange}%`;
-        
-        // Update grafik
-        updateChart(transaksi);
-        
-      } catch (error) {
-        console.error('Error loading dashboard data:', error);
-        alert('Gagal memuat data dashboard');
-      } finally {
-        hideLoading();
+    // Fungsi untuk menampilkan notifikasi
+    function showNotification(message, type = 'info', duration = 3000) {
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 
+        type === 'warning' ? 'bg-yellow-500' :
+        'bg-blue-500'
+      } text-white z-50 transition-all duration-300 transform translate-x-full`;
+      
+      notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <span class="material-icons">${
+            type === 'success' ? 'check_circle' : 
+            type === 'error' ? 'error' : 
+            type === 'warning' ? 'warning' :
+            'info'
+          }</span>
+          <span>${message}</span>
+        </div>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+      }, 100);
+      
+      setTimeout(() => {
+        notification.style.transform = 'translateX(full)';
+        setTimeout(() => {
+          notification.remove();
+        }, 300);
+      }, duration);
+    }
+
+    // Fungsi untuk menampilkan notifikasi stok menipis
+    function showLowStockNotification(products) {
+      const lowStockThreshold = 5; // Batas minimum stok
+      const lowStockProducts = products.filter(p => p.stock <= lowStockThreshold);
+      
+      if (lowStockProducts.length > 0) {
+        const productNames = lowStockProducts.map(p => p.name).join(', ');
+        showNotification(
+          `Stok menipis untuk produk: ${productNames}`,
+          'warning',
+          5000
+        );
       }
     }
 
-    // Fungsi untuk update grafik
-    function updateChart(transaksi) {
-      const ctx = document.getElementById('financeChart').getContext('2d');
+    // Fungsi untuk menampilkan notifikasi transaksi besar
+    function showLargeTransactionNotification(transactions) {
+      const largeTransactionThreshold = 1000000; // Rp 1 juta
+      const today = new Date().toISOString().split('T')[0];
+      const todayTransactions = transactions.filter(t => t.date.startsWith(today));
       
-      // Kelompokkan transaksi berdasarkan bulan
-      const monthlyData = {};
-      transaksi.forEach(t => {
-        const date = new Date(t.tanggal);
-        const month = date.toLocaleString('id-ID', { month: 'short' });
-        
-        if (!monthlyData[month]) {
-          monthlyData[month] = { masuk: 0, keluar: 0 };
-        }
-        
-        if (t.jenis === 'masuk') {
-          monthlyData[month].masuk += t.jumlah;
-        } else {
-          monthlyData[month].keluar += t.jumlah;
-        }
-      });
+      const largeTransactions = todayTransactions.filter(t => t.total >= largeTransactionThreshold);
       
-      // Siapkan data untuk grafik
-      const labels = Object.keys(monthlyData);
-      const masukData = labels.map(month => monthlyData[month].masuk);
-      const keluarData = labels.map(month => monthlyData[month].keluar);
-      
-      // Update grafik
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Pemasukan',
-            data: masukData,
-            borderColor: '#10B981',
-            tension: 0.4
-          }, {
-            label: 'Pengeluaran',
-            data: keluarData,
-            borderColor: '#EF4444',
-            tension: 0.4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'top',
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                callback: function(value) {
-                  return 'Rp ' + value.toLocaleString('id-ID');
-                }
-              }
-            }
-          }
-        }
-      });
-    }
-
-    // Handle logout
-    function handleLogout() {
-      if (confirm('Apakah Anda yakin ingin keluar?')) {
-        // Hapus data user
-        localStorage.removeItem('currentUser');
-        // Redirect ke halaman login
-        window.location.href = 'login.html';
+      if (largeTransactions.length > 0) {
+        showNotification(
+          `Ada ${largeTransactions.length} transaksi besar hari ini`,
+          'info',
+          5000
+        );
       }
     }
 
-    // Panggil fungsi load data saat halaman dimuat
+    // Fungsi untuk menampilkan prediksi keuangan
+    function showFinancialPrediction(transactions, currentBalance) {
+      const lastWeekTransactions = transactions.slice(-7);
+      const averageDailyIncome = lastWeekTransactions
+        .filter(t => t.type === 'masuk')
+        .reduce((sum, t) => sum + t.total, 0) / 7;
+        
+      const averageDailyExpense = lastWeekTransactions
+        .filter(t => t.type === 'keluar')
+        .reduce((sum, t) => sum + t.total, 0) / 7;
+        
+      const predictedBalance = currentBalance + (averageDailyIncome - averageDailyExpense) * 7;
+      
+      if (predictedBalance < 0) {
+        showNotification(
+          'Prediksi: Saldo akan negatif dalam 7 hari ke depan',
+          'error',
+          5000
+        );
+      } else if (predictedBalance < currentBalance * 0.5) {
+        showNotification(
+          'Prediksi: Saldo akan menurun signifikan dalam 7 hari ke depan',
+          'warning',
+          5000
+        );
+      }
+    }
+
+    // Fungsi untuk mengecek semua notifikasi
+    function checkNotifications(products, transactions, currentBalance) {
+      showLowStockNotification(products);
+      showLargeTransactionNotification(transactions);
+      showFinancialPrediction(transactions, currentBalance);
+    }
+
+    // Event listener untuk semua tombol
     document.addEventListener('DOMContentLoaded', () => {
+      // Tombol Refresh
+      document.querySelector('button[title="Refresh"]').addEventListener('click', () => {
+        loadDashboardData();
+        showNotification('Data berhasil diperbarui', 'success');
+      });
+
+      // Tombol Hari Ini
+      document.querySelector('button[title="Hari Ini"]').addEventListener('click', () => {
+        loadDashboardData();
+        showNotification('Menampilkan data hari ini', 'info');
+      });
+
+      // Tombol Notifikasi
+      document.querySelector('button[title="Notifikasi"]').addEventListener('click', () => {
+        const products = JSON.parse(localStorage.getItem('products')) || [];
+        const transactions = JSON.parse(localStorage.getItem('transaksi')) || [];
+        const currentBalance = parseFloat(document.querySelector('[data-stat="balance"]').textContent.replace(/[^0-9-]/g, ''));
+        
+        checkNotifications(products, transactions, currentBalance);
+      });
+
+      // Tombol Logout
+      document.getElementById('logoutButton').addEventListener('click', handleLogout);
+
+      // Tombol Mobile Menu
+      const mobileMenuButton = document.getElementById('mobileMenuButton');
+      const mobileMenu = document.querySelector('.mobile-menu');
+      if (mobileMenuButton && mobileMenu) {
+        mobileMenuButton.addEventListener('click', () => {
+          mobileMenu.classList.toggle('active');
+        });
+      }
+
+      // Tombol Transaksi Baru
+      document.querySelector('a[href="transaksi.html"]').addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = 'transaksi.html';
+      });
+
+      // Tombol Produk
+      document.querySelector('a[href="produk.html"]').addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = 'produk.html';
+      });
+
+      // Tombol Laporan
+      document.querySelector('a[href="laporan.html"]').addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = 'laporan.html';
+      });
+
+      // Load data awal
       loadDashboardData();
     });
   </script>
