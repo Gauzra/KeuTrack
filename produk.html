@@ -137,6 +137,12 @@
             <span>Export/Backup</span>
           </a>
         </li>
+        <li>
+          <a href="profil.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">person</span>
+            <span>Profil</span>
+          </a>
+        </li>
       </ul>
     </nav>
     <div class="absolute bottom-0 w-full p-4">
@@ -419,10 +425,30 @@
       }
     }
 
-    // Fungsi untuk logout
-    function handleLogout() {
-      localStorage.removeItem('currentUser');
-      window.location.href = 'login.html';
+    // Handle logout
+    async function handleLogout() {
+      try {
+        const confirmed = await new Promise((resolve) => {
+          const result = confirm('Apakah Anda yakin ingin keluar?');
+          resolve(result);
+        });
+
+        if (confirmed) {
+          showLoading();
+          // Simulasi delay untuk animasi loading
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Hapus semua data user
+          localStorage.removeItem('currentUser');
+          
+          // Redirect ke halaman login
+          window.location.href = 'login.html';
+        }
+      } catch (error) {
+        console.error('Error during logout:', error);
+        hideLoading();
+        alert('Terjadi kesalahan saat logout. Silakan coba lagi.');
+      }
     }
 
     // Fungsi untuk menampilkan loading

@@ -278,14 +278,21 @@
         
         // Load data dari localStorage
         const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
+        console.log('Data transaksi:', transaksi); // Debug log
+        
+        if (!Array.isArray(transaksi)) {
+          throw new Error('Format data transaksi tidak valid');
+        }
         
         // Hitung total pendapatan dan pengeluaran
         const totalPendapatan = transaksi.reduce((total, t) => {
-          return total + (t.jenis === 'masuk' ? t.jumlah : 0);
+          if (!t.jenis || !t.jumlah) return total;
+          return total + (t.jenis === 'masuk' ? Number(t.jumlah) : 0);
         }, 0);
         
         const totalPengeluaran = transaksi.reduce((total, t) => {
-          return total + (t.jenis === 'keluar' ? t.jumlah : 0);
+          if (!t.jenis || !t.jumlah) return total;
+          return total + (t.jenis === 'keluar' ? Number(t.jumlah) : 0);
         }, 0);
         
         // Update ringkasan
@@ -301,7 +308,7 @@
         
       } catch (error) {
         console.error('Error loading laporan data:', error);
-        alert('Gagal memuat data laporan');
+        alert('Gagal memuat data laporan: ' + error.message);
       } finally {
         hideLoading();
       }
@@ -309,96 +316,142 @@
 
     // Fungsi untuk update grafik
     function updateChart(transaksi) {
-      const ctx = document.getElementById('financeChart').getContext('2d');
-      
-      // Kelompokkan transaksi berdasarkan bulan
-      const monthlyData = {};
-      transaksi.forEach(t => {
-        const date = new Date(t.tanggal);
-        const month = date.toLocaleString('id-ID', { month: 'short' });
+      try {
+        const ctx = document.getElementById('financeChart').getContext('2d');
         
-        if (!monthlyData[month]) {
-          monthlyData[month] = { masuk: 0, keluar: 0 };
+        // Kelompokkan transaksi berdasarkan bulan
+        const monthlyData = {};
+        transaksi.forEach(t => {
+          if (!t.tanggal) return;
+          
+          const date = new Date(t.tanggal);
+          if (isNaN(date.getTime())) return;
+          
+          const month = date.toLocaleString('id-ID', { month: 'short' });
+          
+          if (!monthlyData[month]) {
+            monthlyData[month] = { masuk: 0, keluar: 0 };
+          }
+          
+          if (t.jenis === 'masuk') {
+            monthlyData[month].masuk += Number(t.jumlah) || 0;
+          } else if (t.jenis === 'keluar') {
+            monthlyData[month].keluar += Number(t.jumlah) || 0;
+          }
+        });
+        
+        // Siapkan data untuk grafik
+        const labels = Object.keys(monthlyData);
+        const masukData = labels.map(month => monthlyData[month].masuk);
+        const keluarData = labels.map(month => monthlyData[month].keluar);
+        
+        // Destroy existing chart if it exists
+        if (window.financeChart) {
+          window.financeChart.destroy();
         }
         
-        if (t.jenis === 'masuk') {
-          monthlyData[month].masuk += t.jumlah;
-        } else {
-          monthlyData[month].keluar += t.jumlah;
-        }
-      });
-      
-      // Siapkan data untuk grafik
-      const labels = Object.keys(monthlyData);
-      const masukData = labels.map(month => monthlyData[month].masuk);
-      const keluarData = labels.map(month => monthlyData[month].keluar);
-      
-      // Update grafik
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Pemasukan',
-            data: masukData,
-            borderColor: '#10B981',
-            tension: 0.4
-          }, {
-            label: 'Pengeluaran',
-            data: keluarData,
-            borderColor: '#EF4444',
-            tension: 0.4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'top',
-            }
+        // Update grafik
+        window.financeChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Pemasukan',
+              data: masukData,
+              borderColor: '#10B981',
+              tension: 0.4
+            }, {
+              label: 'Pengeluaran',
+              data: keluarData,
+              borderColor: '#EF4444',
+              tension: 0.4
+            }]
           },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                callback: function(value) {
-                  return 'Rp ' + value.toLocaleString('id-ID');
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'top',
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function(value) {
+                    return 'Rp ' + value.toLocaleString('id-ID');
+                  }
                 }
               }
             }
           }
-        }
-      });
+        });
+      } catch (error) {
+        console.error('Error updating chart:', error);
+      }
     }
 
     // Fungsi untuk update tabel
     function updateTable(transaksi) {
-      const tbody = document.querySelector('#laporanTable tbody');
-      tbody.innerHTML = '';
-      
-      // Urutkan transaksi berdasarkan tanggal terbaru
-      transaksi.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
-      
-      transaksi.forEach(t => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="px-4 py-3 text-sm">${new Date(t.tanggal).toLocaleDateString('id-ID')}</td>
-          <td class="px-4 py-3 text-sm">${t.keterangan}</td>
-          <td class="px-4 py-3 text-sm">${t.jenis === 'masuk' ? 'Pemasukan' : 'Pengeluaran'}</td>
-          <td class="px-4 py-3 text-sm font-medium ${t.jenis === 'masuk' ? 'text-green-600' : 'text-red-600'}">
-            Rp ${t.jumlah.toLocaleString('id-ID')}
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
+      try {
+        const tbody = document.querySelector('#laporanTable tbody');
+        if (!tbody) {
+          console.error('Tabel body tidak ditemukan');
+          return;
+        }
+        
+        tbody.innerHTML = '';
+        
+        // Urutkan transaksi berdasarkan tanggal terbaru
+        const sortedTransaksi = [...transaksi].sort((a, b) => {
+          const dateA = new Date(a.tanggal);
+          const dateB = new Date(b.tanggal);
+          return dateB - dateA;
+        });
+        
+        sortedTransaksi.forEach(t => {
+          if (!t.tanggal || !t.keterangan || !t.jenis || !t.jumlah) return;
+          
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="px-4 py-3 text-sm">${new Date(t.tanggal).toLocaleDateString('id-ID')}</td>
+            <td class="px-4 py-3 text-sm">${t.keterangan}</td>
+            <td class="px-4 py-3 text-sm">${t.jenis === 'masuk' ? 'Pemasukan' : 'Pengeluaran'}</td>
+            <td class="px-4 py-3 text-sm font-medium ${t.jenis === 'masuk' ? 'text-green-600' : 'text-red-600'}">
+              Rp ${Number(t.jumlah).toLocaleString('id-ID')}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (error) {
+        console.error('Error updating table:', error);
+      }
     }
 
     // Handle logout
-    function handleLogout() {
-      if (confirm('Apakah Anda yakin ingin keluar?')) {
-        localStorage.removeItem('currentUser');
-        window.location.href = 'login.html';
+    async function handleLogout() {
+      try {
+        const confirmed = await new Promise((resolve) => {
+          const result = confirm('Apakah Anda yakin ingin keluar?');
+          resolve(result);
+        });
+
+        if (confirmed) {
+          showLoading();
+          // Simulasi delay untuk animasi loading
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Hapus semua data user
+          localStorage.removeItem('currentUser');
+          
+          // Redirect ke halaman login
+          window.location.href = 'login.html';
+        }
+      } catch (error) {
+        console.error('Error during logout:', error);
+        hideLoading();
+        alert('Terjadi kesalahan saat logout. Silakan coba lagi.');
       }
     }
 
