@@ -5,11 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KeuTrack - Redirect</title>
   <script>
-    // Redirect ke halaman login
-    window.location.href = 'login.html';
+    // Cek apakah user sudah login
+    const user = localStorage.getItem('currentUser');
+    if (user) {
+      window.location.href = 'dashboard.html';
+    } else {
+      window.location.href = 'login.html';
+    }
   </script>
 </head>
 <body>
-  <p>Redirecting to login page...</p>
+  <p>Redirecting...</p>
 </body>
 </html> 
