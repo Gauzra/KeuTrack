@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>KeuTrack - Transaksi</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
@@ -25,11 +25,78 @@
       }
     }
   </script>
+  <style>
+    @media (max-width: 768px) {
+      .mobile-menu {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+      }
+      .mobile-menu.active {
+        transform: translateX(0);
+      }
+    }
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #2c3e50;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+    }
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+  </style>
 </head>
 <body class="bg-gray-50 font-sans">
+  <!-- Mobile Header -->
+  <div class="lg:hidden fixed top-0 left-0 right-0 bg-primary text-white p-4 z-50">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button id="mobileMenuButton" class="text-white">
+          <span class="material-icons">menu</span>
+        </button>
+        <img src="./images/LOGO KT.svg" alt="KeuTrack Logo" class="w-10 h-10">
+        <span class="text-xl font-semibold">KeuTrack</span>
+      </div>
+      <button class="text-white">
+        <span class="material-icons">notifications</span>
+      </button>
+    </div>
+  </div>
+
   <!-- Sidebar -->
-  <div class="fixed inset-y-0 left-0 w-64 bg-primary text-white">
-    <div class="p-6">
+  <div class="fixed inset-y-0 left-0 w-64 bg-primary text-white mobile-menu lg:translate-x-0 z-40">
+    <div class="p-6 hidden lg:block">
       <div class="flex items-center space-x-4">
         <img src="./images/LOGO KT.svg" alt="KeuTrack Logo" class="w-[70px] h-[70px]">
         <span class="text-2xl font-semibold mt-1">KeuTrack</span>
@@ -84,21 +151,21 @@
   </div>
 
   <!-- Main Content -->
-  <div class="ml-64 p-8">
+  <div class="lg:ml-64 p-4 lg:p-8 mt-16 lg:mt-0">
     <!-- Header -->
-    <div class="bg-primary text-white rounded-lg p-6 mb-8">
-      <div class="flex justify-between items-start">
+    <div class="bg-primary text-white rounded-lg p-4 lg:p-6 mb-6 lg:mb-8">
+      <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start space-y-4 lg:space-y-0">
         <div>
-          <h1 class="text-2xl font-semibold">Transaksi</h1>
-          <p class="text-white/80 mt-1">Catat dan kelola transaksi bisnismu</p>
+          <h1 class="text-xl lg:text-2xl font-semibold">Transaksi</h1>
+          <p class="text-white/80 mt-1 text-sm lg:text-base">Catat dan kelola transaksi bisnismu</p>
         </div>
         <div class="flex space-x-3">
-          <button class="flex items-center space-x-2 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">
-            <span class="material-icons">calendar_today</span>
+          <button class="flex items-center space-x-2 px-3 lg:px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors text-sm">
+            <span class="material-icons text-sm">calendar_today</span>
             <span>Hari Ini</span>
           </button>
-          <button class="flex items-center space-x-2 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">
-            <span class="material-icons">refresh</span>
+          <button class="flex items-center space-x-2 px-3 lg:px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors text-sm">
+            <span class="material-icons text-sm">refresh</span>
             <span>Refresh</span>
           </button>
         </div>
@@ -109,12 +176,12 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Form Transaksi -->
       <div class="lg:col-span-1">
-        <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6">
           <h2 class="text-lg font-semibold text-gray-800 mb-4">Transaksi Baru</h2>
           <form id="transactionForm" class="space-y-4">
             <div>
               <label for="transactionType" class="block text-sm font-medium text-gray-700 mb-1">Jenis Transaksi</label>
-              <select id="transactionType" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" required>
+              <select id="transactionType" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm" required>
                 <option value="">Pilih Jenis Transaksi</option>
                 <option value="masuk">Pemasukan</option>
                 <option value="keluar">Pengeluaran</option>
@@ -123,32 +190,32 @@
 
             <div>
               <label for="transactionDate" class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
-              <input type="date" id="transactionDate" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" required>
+              <input type="date" id="transactionDate" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm" required>
             </div>
 
             <div>
               <label for="productSelect" class="block text-sm font-medium text-gray-700 mb-1">Produk</label>
-              <select id="productSelect" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" required>
+              <select id="productSelect" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm" required>
                 <option value="">Pilih Produk</option>
               </select>
             </div>
 
             <div>
               <label for="quantity" class="block text-sm font-medium text-gray-700 mb-1">Jumlah</label>
-              <input type="number" id="quantity" min="1" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" required>
+              <input type="number" id="quantity" min="1" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm" required>
             </div>
 
             <div>
               <label for="totalAmount" class="block text-sm font-medium text-gray-700 mb-1">Total (Rp)</label>
-              <input type="number" id="totalAmount" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-50" readonly>
+              <input type="number" id="totalAmount" class="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-50 text-sm" readonly>
             </div>
 
             <div>
               <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
-              <textarea id="description" rows="3" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"></textarea>
+              <textarea id="description" rows="3" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm"></textarea>
             </div>
 
-            <button type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors">
+            <button type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors text-sm">
               Simpan Transaksi
             </button>
           </form>
@@ -157,24 +224,24 @@
 
       <!-- Daftar Transaksi -->
       <div class="lg:col-span-2">
-        <div class="bg-white rounded-lg shadow-sm p-6">
-          <div class="flex justify-between items-center mb-6">
+        <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6">
+          <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-3 lg:space-y-0 mb-4 lg:mb-6">
             <h2 class="text-lg font-semibold text-gray-800">Daftar Transaksi</h2>
-            <div class="flex items-center space-x-4">
-              <div class="flex items-center space-x-2">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+              <div class="flex items-center space-x-2 w-full sm:w-auto">
                 <label class="text-sm text-gray-600">Filter:</label>
-                <select id="filterTransaksi" class="px-3 py-1 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                <select id="filterTransaksi" class="px-3 py-1 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none w-full sm:w-auto">
                   <option value="today">Hari Ini</option>
                   <option value="week">Minggu Ini</option>
                   <option value="month">Bulan Ini</option>
                   <option value="all">Semua</option>
                 </select>
               </div>
-              <div class="relative">
-                <input type="text" id="searchTransaksi" placeholder="Cari transaksi..." class="pl-8 pr-4 py-1 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+              <div class="relative w-full sm:w-auto">
+                <input type="text" id="searchTransaksi" placeholder="Cari transaksi..." class="w-full pl-8 pr-4 py-1 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
                 <span class="material-icons absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">search</span>
               </div>
-              <button id="clearAllTransaksi" class="px-4 py-1 bg-danger text-white rounded-lg text-sm hover:bg-danger/90 transition-colors">
+              <button id="clearAllTransaksi" class="w-full sm:w-auto px-4 py-1 bg-danger text-white rounded-lg text-sm hover:bg-danger/90 transition-colors">
                 Bersihkan Semua
               </button>
             </div>
@@ -184,12 +251,12 @@
             <table class="min-w-full">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produk</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                  <th class="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                  <th class="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produk</th>
+                  <th class="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
+                  <th class="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                  <th class="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+                  <th class="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                 </tr>
               </thead>
               <tbody id="transaksiList" class="divide-y divide-gray-200">
@@ -202,7 +269,29 @@
     </div>
   </div>
 
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
   <script>
+    // Mobile Menu Toggle
+    const mobileMenuButton = document.getElementById('mobileMenuButton');
+    const mobileMenu = document.querySelector('.mobile-menu');
+    const overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 bg-black/50 z-30 hidden';
+    document.body.appendChild(overlay);
+
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('active');
+      overlay.classList.toggle('hidden');
+    });
+
+    overlay.addEventListener('click', () => {
+      mobileMenu.classList.remove('active');
+      overlay.classList.add('hidden');
+    });
+
     // Fungsi untuk mengambil produk dari localStorage
     function getProducts() {
       return JSON.parse(localStorage.getItem('produk')) || [];
@@ -212,7 +301,7 @@
     function saveTransaction(transaction) {
       let transactions = JSON.parse(localStorage.getItem('transaksi')) || [];
       transaction.id = Date.now();
-      transaction.date = new Date().toISOString(); // Simpan dalam format ISO string
+      transaction.date = new Date().toISOString();
       transactions.push(transaction);
       localStorage.setItem('transaksi', JSON.stringify(transactions));
     }
@@ -250,108 +339,6 @@
       } else {
         document.getElementById('totalAmount').value = '';
       }
-    }
-
-    // Fungsi untuk mendapatkan tanggal awal berdasarkan filter
-    function getStartDate(filter) {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
-      switch(filter) {
-        case 'today':
-          return today; // Awal hari ini
-        case 'week':
-          const weekStart = new Date(today);
-          weekStart.setDate(today.getDate() - today.getDay());
-          return weekStart;
-        case 'month':
-          const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-          return monthStart;
-        case 'all':
-          return new Date(0); // Tanggal paling awal
-        default:
-          return today;
-      }
-    }
-
-    // Fungsi untuk memformat tanggal
-    function formatTanggal(dateString) {
-      const options = { 
-        day: 'numeric', 
-        month: 'long', 
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      };
-      return new Date(dateString).toLocaleDateString('id-ID', options);
-    }
-
-    // Fungsi untuk menampilkan transaksi
-    function tampilkanTransaksi() {
-      const transaksiList = document.getElementById('transaksiList');
-      const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
-      const produk = JSON.parse(localStorage.getItem('produk')) || [];
-      const filter = document.getElementById('filterTransaksi').value;
-      const searchTerm = document.getElementById('searchTransaksi').value.toLowerCase();
-      
-      // Filter transaksi berdasarkan tanggal dan pencarian
-      const startDate = getStartDate(filter);
-      const filteredTransaksi = transaksi.filter(t => {
-        const transaksiDate = new Date(t.date);
-        
-        let matchesDate = false;
-        if (filter === 'today') {
-          // Untuk 'Hari Ini', bandingkan tanggal saja
-          const todayStart = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-          const transaksiDay = new Date(transaksiDate.getFullYear(), transaksiDate.getMonth(), transaksiDate.getDate());
-          matchesDate = transaksiDay.getTime() === todayStart.getTime();
-        } else {
-          // Untuk filter lain, gunakan perbandingan >= startDate
-          matchesDate = transaksiDate >= startDate;
-        }
-
-        const produkItem = produk.find(p => p.id === t.productId) || { name: '' };
-        const matchesSearch = !searchTerm || 
-          produkItem.name.toLowerCase().includes(searchTerm) ||
-          t.type.toLowerCase().includes(searchTerm) ||
-          formatTanggal(t.date).toLowerCase().includes(searchTerm);
-        
-        return matchesDate && matchesSearch;
-      });
-
-      if (filteredTransaksi.length === 0) {
-        transaksiList.innerHTML = `
-          <tr>
-            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-              Tidak ada transaksi yang ditemukan
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      transaksiList.innerHTML = filteredTransaksi.map((t, index) => {
-        const produkItem = produk.find(p => p.id === t.productId) || { name: 'Produk tidak ditemukan' };
-        return `
-          <tr class="hover:bg-gray-50" data-transaksi-id="${t.id}">
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatTanggal(t.date)}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${produkItem.name}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${t.quantity}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatRupiah(t.total)}</td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${t.type === 'masuk' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                ${t.type === 'masuk' ? 'Pemasukan' : 'Pengeluaran'}
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              <button onclick="hapusTransaksi('${t.id}')" class="text-red-600 hover:text-red-900 flex items-center space-x-1">
-                <span class="material-icons text-sm">delete</span>
-                <span>Hapus</span>
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join('');
     }
 
     // Fungsi untuk menghapus transaksi
@@ -570,6 +557,261 @@
 
       // Kode lainnya tetap sama
       // ... existing code ...
+    });
+
+    // Fungsi untuk menampilkan transaksi
+    function tampilkanTransaksi() {
+      const transaksiList = document.getElementById('transaksiList');
+      const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
+      const produk = JSON.parse(localStorage.getItem('produk')) || [];
+      const filter = document.getElementById('filterTransaksi').value;
+      const searchTerm = document.getElementById('searchTransaksi').value.toLowerCase();
+      
+      // Filter transaksi berdasarkan tanggal dan pencarian
+      const startDate = getStartDate(filter);
+      const filteredTransaksi = transaksi.filter(t => {
+        const transaksiDate = new Date(t.date);
+        
+        let matchesDate = false;
+        if (filter === 'today') {
+          // Untuk 'Hari Ini', bandingkan tanggal saja
+          const todayStart = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+          const transaksiDay = new Date(transaksiDate.getFullYear(), transaksiDate.getMonth(), transaksiDate.getDate());
+          matchesDate = transaksiDay.getTime() === todayStart.getTime();
+        } else {
+          // Untuk filter lain, gunakan perbandingan >= startDate
+          matchesDate = transaksiDate >= startDate;
+        }
+
+        const produkItem = produk.find(p => p.id === t.productId) || { name: '' };
+        const matchesSearch = !searchTerm || 
+          produkItem.name.toLowerCase().includes(searchTerm) ||
+          t.type.toLowerCase().includes(searchTerm) ||
+          formatTanggal(t.date).toLowerCase().includes(searchTerm);
+        
+        return matchesDate && matchesSearch;
+      });
+
+      if (filteredTransaksi.length === 0) {
+        transaksiList.innerHTML = `
+          <tr>
+            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+              Tidak ada transaksi yang ditemukan
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      transaksiList.innerHTML = filteredTransaksi.map((t, index) => {
+        const produkItem = produk.find(p => p.id === t.productId) || { name: 'Produk tidak ditemukan' };
+        return `
+          <tr class="hover:bg-gray-50" data-transaksi-id="${t.id}">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatTanggal(t.date)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${produkItem.name}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${t.quantity}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatRupiah(t.total)}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${t.type === 'masuk' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                ${t.type === 'masuk' ? 'Pemasukan' : 'Pengeluaran'}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <button onclick="hapusTransaksi('${t.id}')" class="text-red-600 hover:text-red-900 flex items-center space-x-1">
+                <span class="material-icons text-sm">delete</span>
+                <span>Hapus</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Fungsi untuk mendapatkan tanggal awal berdasarkan filter
+    function getStartDate(filter) {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      switch(filter) {
+        case 'today':
+          return today; // Awal hari ini
+        case 'week':
+          const weekStart = new Date(today);
+          weekStart.setDate(today.getDate() - today.getDay());
+          return weekStart;
+        case 'month':
+          const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+          return monthStart;
+        case 'all':
+          return new Date(0); // Tanggal paling awal
+        default:
+          return today;
+      }
+    }
+
+    // Fungsi untuk memformat tanggal
+    function formatTanggal(dateString) {
+      const options = { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      };
+      return new Date(dateString).toLocaleDateString('id-ID', options);
+    }
+
+    // Fungsi untuk menampilkan loading
+    function showLoading() {
+      document.getElementById('loadingOverlay').classList.add('active');
+    }
+
+    // Fungsi untuk menyembunyikan loading
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
+    // Fungsi untuk menampilkan skeleton loading
+    function showSkeletonLoading() {
+      const tbody = document.querySelector('tbody');
+      tbody.innerHTML = Array(5).fill(`
+        <tr>
+          <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap">
+            <div class="skeleton h-4 w-24"></div>
+          </td>
+          <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap">
+            <div class="skeleton h-4 w-32"></div>
+          </td>
+          <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap">
+            <div class="skeleton h-4 w-20"></div>
+          </td>
+          <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap">
+            <div class="skeleton h-4 w-24"></div>
+          </td>
+          <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap">
+            <div class="skeleton h-4 w-24"></div>
+          </td>
+          <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap">
+            <div class="skeleton h-8 w-24"></div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Fungsi untuk memuat data transaksi
+    async function loadTransaksiData() {
+      try {
+        showLoading();
+        showSkeletonLoading();
+        
+        // Simulasi delay loading data
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Load data dari localStorage
+        const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
+        
+        // Update tabel
+        const tbody = document.querySelector('tbody');
+        tbody.innerHTML = transaksi.map(t => `
+          <tr class="hover:bg-gray-50">
+            <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">${t.tanggal}</td>
+            <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">${t.jenis}</td>
+            <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">${t.produk}</td>
+            <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">${t.jumlah}</td>
+            <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">${t.total}</td>
+            <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm">
+              <button onclick="editTransaksi('${t.id}')" class="text-primary hover:text-primary/80 transition-colors">
+                <span class="material-icons text-sm">edit</span>
+              </button>
+              <button onclick="deleteTransaksi('${t.id}')" class="text-danger hover:text-danger/80 transition-colors ml-2">
+                <span class="material-icons text-sm">delete</span>
+              </button>
+            </td>
+          </tr>
+        `).join('');
+        
+      } catch (error) {
+        console.error('Error loading transaksi data:', error);
+        alert('Gagal memuat data transaksi');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Fungsi untuk menyimpan transaksi
+    async function saveTransaksi(event) {
+      event.preventDefault();
+      
+      try {
+        showLoading();
+        
+        const formData = new FormData(event.target);
+        const transaksi = {
+          id: Date.now().toString(),
+          tanggal: formData.get('tanggal'),
+          jenis: formData.get('jenis'),
+          produk: formData.get('produk'),
+          jumlah: parseInt(formData.get('jumlah')),
+          total: parseInt(formData.get('total')),
+          keterangan: formData.get('keterangan')
+        };
+        
+        // Simulasi delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Simpan ke localStorage
+        const transaksiList = JSON.parse(localStorage.getItem('transaksi')) || [];
+        const existingIndex = transaksiList.findIndex(t => t.id === transaksi.id);
+        
+        if (existingIndex >= 0) {
+          transaksiList[existingIndex] = transaksi;
+        } else {
+          transaksiList.push(transaksi);
+        }
+        
+        localStorage.setItem('transaksi', JSON.stringify(transaksiList));
+        
+        // Reset form dan reload data
+        event.target.reset();
+        loadTransaksiData();
+        
+      } catch (error) {
+        console.error('Error saving transaksi:', error);
+        alert('Gagal menyimpan transaksi');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Fungsi untuk menghapus transaksi
+    async function deleteTransaksi(id) {
+      if (!confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) return;
+      
+      try {
+        showLoading();
+        
+        // Simulasi delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Hapus dari localStorage
+        const transaksiList = JSON.parse(localStorage.getItem('transaksi')) || [];
+        const newList = transaksiList.filter(t => t.id !== id);
+        localStorage.setItem('transaksi', JSON.stringify(newList));
+        
+        // Reload data
+        loadTransaksiData();
+        
+      } catch (error) {
+        console.error('Error deleting transaksi:', error);
+        alert('Gagal menghapus transaksi');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Panggil fungsi load data saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', () => {
+      loadTransaksiData();
     });
   </script>
 </body>

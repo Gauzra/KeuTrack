@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>KeuTrack - Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -26,11 +26,78 @@
       }
     }
   </script>
+  <style>
+    @media (max-width: 768px) {
+      .mobile-menu {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+      }
+      .mobile-menu.active {
+        transform: translateX(0);
+      }
+    }
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #2c3e50;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+    }
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+  </style>
 </head>
 <body class="bg-gray-50 font-sans">
+  <!-- Mobile Header -->
+  <div class="lg:hidden fixed top-0 left-0 right-0 bg-primary text-white p-4 z-50">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button id="mobileMenuButton" class="text-white">
+          <span class="material-icons">menu</span>
+        </button>
+        <img src="./images/LOGO KT.svg" alt="KeuTrack Logo" class="w-10 h-10">
+        <span class="text-xl font-semibold">KeuTrack</span>
+      </div>
+      <button class="text-white">
+        <span class="material-icons">notifications</span>
+      </button>
+    </div>
+  </div>
+
   <!-- Sidebar -->
-  <div class="fixed inset-y-0 left-0 w-64 bg-primary text-white">
-    <div class="p-6">
+  <div class="fixed inset-y-0 left-0 w-64 bg-primary text-white mobile-menu lg:translate-x-0 z-40">
+    <div class="p-6 hidden lg:block">
       <div class="flex items-center space-x-4">
         <img src="./images/LOGO KT.svg" alt="KeuTrack Logo" class="w-[70px] h-[70px]">
         <span class="text-2xl font-semibold mt-1">KeuTrack</span>
@@ -85,21 +152,21 @@
   </div>
 
   <!-- Main Content -->
-  <div class="ml-64 p-8">
+  <div class="lg:ml-64 p-4 lg:p-8 mt-16 lg:mt-0">
     <!-- Header -->
-    <div class="bg-primary text-white rounded-lg p-6 mb-8">
-      <div class="flex justify-between items-start">
+    <div class="bg-primary text-white rounded-lg p-4 lg:p-6 mb-6 lg:mb-8">
+      <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start space-y-4 lg:space-y-0">
         <div>
-          <h1 class="text-2xl font-semibold">Selamat Datang di KeuTrack</h1>
-          <p class="text-white/80 mt-1">Ringkasan keuangan bisnismu hari ini</p>
+          <h1 class="text-xl lg:text-2xl font-semibold">Selamat Datang di KeuTrack</h1>
+          <p class="text-white/80 mt-1 text-sm lg:text-base">Ringkasan keuangan bisnismu hari ini</p>
         </div>
         <div class="flex space-x-3">
-          <button class="flex items-center space-x-2 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">
-            <span class="material-icons">calendar_today</span>
+          <button class="flex items-center space-x-2 px-3 lg:px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors text-sm">
+            <span class="material-icons text-sm">calendar_today</span>
             <span>Hari Ini</span>
           </button>
-          <button class="flex items-center space-x-2 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">
-            <span class="material-icons">refresh</span>
+          <button class="flex items-center space-x-2 px-3 lg:px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors text-sm">
+            <span class="material-icons text-sm">refresh</span>
             <span>Refresh</span>
           </button>
         </div>
@@ -107,120 +174,120 @@
     </div>
 
     <!-- Quick Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
       <!-- Total Saldo -->
-      <div class="bg-white rounded-lg shadow-sm p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-medium text-gray-500">Total Saldo</h3>
-          <span class="material-icons text-primary">account_balance_wallet</span>
+      <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6">
+        <div class="flex items-center justify-between mb-3 lg:mb-4">
+          <h3 class="text-xs lg:text-sm font-medium text-gray-500">Total Saldo</h3>
+          <span class="material-icons text-primary text-lg lg:text-xl">account_balance_wallet</span>
         </div>
-        <p class="text-2xl font-semibold text-gray-900" data-stat="balance">Rp 15.000.000</p>
+        <p class="text-xl lg:text-2xl font-semibold text-gray-900" data-stat="balance">Rp 15.000.000</p>
         <div class="flex items-center mt-2">
-          <span class="text-success text-sm font-medium flex items-center">
-            <span class="material-icons text-sm mr-1">trending_up</span>
+          <span class="text-success text-xs lg:text-sm font-medium flex items-center">
+            <span class="material-icons text-xs lg:text-sm mr-1">trending_up</span>
             <span data-stat="income-change">+2.5%</span>
           </span>
-          <span class="text-gray-500 text-sm ml-2">dari bulan lalu</span>
+          <span class="text-gray-500 text-xs lg:text-sm ml-2">dari bulan lalu</span>
         </div>
       </div>
 
       <!-- Total Pemasukan -->
-      <div class="bg-white rounded-lg shadow-sm p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-medium text-gray-500">Total Pemasukan</h3>
-          <span class="material-icons text-success">trending_up</span>
+      <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6">
+        <div class="flex items-center justify-between mb-3 lg:mb-4">
+          <h3 class="text-xs lg:text-sm font-medium text-gray-500">Total Pemasukan</h3>
+          <span class="material-icons text-success text-lg lg:text-xl">trending_up</span>
         </div>
-        <p class="text-2xl font-semibold text-gray-900" data-stat="income">Rp 8.500.000</p>
+        <p class="text-xl lg:text-2xl font-semibold text-gray-900" data-stat="income">Rp 8.500.000</p>
         <div class="flex items-center mt-2">
-          <span class="text-success text-sm font-medium flex items-center">
-            <span class="material-icons text-sm mr-1">trending_up</span>
+          <span class="text-success text-xs lg:text-sm font-medium flex items-center">
+            <span class="material-icons text-xs lg:text-sm mr-1">trending_up</span>
             <span data-stat="income-change">+5.2%</span>
           </span>
-          <span class="text-gray-500 text-sm ml-2">dari bulan lalu</span>
+          <span class="text-gray-500 text-xs lg:text-sm ml-2">dari bulan lalu</span>
         </div>
       </div>
 
       <!-- Total Pengeluaran -->
-      <div class="bg-white rounded-lg shadow-sm p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-medium text-gray-500">Total Pengeluaran</h3>
-          <span class="material-icons text-danger">trending_down</span>
+      <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6">
+        <div class="flex items-center justify-between mb-3 lg:mb-4">
+          <h3 class="text-xs lg:text-sm font-medium text-gray-500">Total Pengeluaran</h3>
+          <span class="material-icons text-danger text-lg lg:text-xl">trending_down</span>
         </div>
-        <p class="text-2xl font-semibold text-gray-900" data-stat="expense">Rp 3.200.000</p>
+        <p class="text-xl lg:text-2xl font-semibold text-gray-900" data-stat="expense">Rp 3.200.000</p>
         <div class="flex items-center mt-2">
-          <span class="text-danger text-sm font-medium flex items-center">
-            <span class="material-icons text-sm mr-1">trending_down</span>
+          <span class="text-danger text-xs lg:text-sm font-medium flex items-center">
+            <span class="material-icons text-xs lg:text-sm mr-1">trending_down</span>
             -1.8%
           </span>
-          <span class="text-gray-500 text-sm ml-2">dari bulan lalu</span>
+          <span class="text-gray-500 text-xs lg:text-sm ml-2">dari bulan lalu</span>
         </div>
       </div>
 
       <!-- Transaksi Hari Ini -->
-      <div class="bg-white rounded-lg shadow-sm p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-medium text-gray-500">Transaksi Hari Ini</h3>
-          <span class="material-icons text-primary">receipt_long</span>
+      <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6">
+        <div class="flex items-center justify-between mb-3 lg:mb-4">
+          <h3 class="text-xs lg:text-sm font-medium text-gray-500">Transaksi Hari Ini</h3>
+          <span class="material-icons text-primary text-lg lg:text-xl">receipt_long</span>
         </div>
-        <p class="text-2xl font-semibold text-gray-900" data-stat="transactions">24</p>
+        <p class="text-xl lg:text-2xl font-semibold text-gray-900" data-stat="transactions">24</p>
         <div class="flex items-center mt-2">
-          <span class="text-success text-sm font-medium flex items-center">
-            <span class="material-icons text-sm mr-1">trending_up</span>
+          <span class="text-success text-xs lg:text-sm font-medium flex items-center">
+            <span class="material-icons text-xs lg:text-sm mr-1">trending_up</span>
             +8.3%
           </span>
-          <span class="text-gray-500 text-sm ml-2">dari kemarin</span>
+          <span class="text-gray-500 text-xs lg:text-sm ml-2">dari kemarin</span>
         </div>
       </div>
     </div>
 
     <!-- Charts and Alerts -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
       <!-- Grafik Tren Keuangan -->
-      <div class="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-lg font-semibold text-gray-800">Tren Keuangan</h2>
-          <select class="px-3 py-1 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+      <div class="lg:col-span-2 bg-white rounded-lg shadow-sm p-4 lg:p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 lg:mb-6 space-y-2 lg:space-y-0">
+          <h2 class="text-base lg:text-lg font-semibold text-gray-800">Tren Keuangan</h2>
+          <select class="px-3 py-1 rounded-lg border border-gray-300 text-xs lg:text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
             <option value="week">Minggu Ini</option>
             <option value="month">Bulan Ini</option>
             <option value="year">Tahun Ini</option>
           </select>
         </div>
-        <div class="h-80">
+        <div class="h-60 lg:h-80">
           <canvas id="financeChart"></canvas>
         </div>
       </div>
 
       <!-- Alert dan Notifikasi -->
-      <div class="bg-white rounded-lg shadow-sm p-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4">Alert & Notifikasi</h2>
-        <div class="space-y-4">
+      <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6">
+        <h2 class="text-base lg:text-lg font-semibold text-gray-800 mb-4">Alert & Notifikasi</h2>
+        <div class="space-y-3 lg:space-y-4">
           <!-- Stok Menipis -->
-          <div class="flex items-start p-4 bg-warning/10 rounded-lg">
-            <span class="material-icons text-warning mr-3">warning</span>
+          <div class="flex items-start p-3 lg:p-4 bg-warning/10 rounded-lg">
+            <span class="material-icons text-warning mr-2 lg:mr-3 text-lg lg:text-xl">warning</span>
             <div>
-              <h4 class="font-medium text-gray-900">Stok Menipis</h4>
-              <p class="text-sm text-gray-600 mt-1">5 produk dengan stok di bawah minimum</p>
-              <button class="text-warning text-sm font-medium mt-2 hover:underline">Lihat Detail</button>
+              <h4 class="font-medium text-gray-900 text-sm lg:text-base">Stok Menipis</h4>
+              <p class="text-xs lg:text-sm text-gray-600 mt-1">5 produk dengan stok di bawah minimum</p>
+              <button class="text-warning text-xs lg:text-sm font-medium mt-2 hover:underline">Lihat Detail</button>
             </div>
           </div>
 
           <!-- Transaksi Besar -->
-          <div class="flex items-start p-4 bg-success/10 rounded-lg">
-            <span class="material-icons text-success mr-3">payments</span>
+          <div class="flex items-start p-3 lg:p-4 bg-success/10 rounded-lg">
+            <span class="material-icons text-success mr-2 lg:mr-3 text-lg lg:text-xl">payments</span>
             <div>
-              <h4 class="font-medium text-gray-900">Transaksi Besar</h4>
-              <p class="text-sm text-gray-600 mt-1">Transaksi Rp 2.500.000 baru saja terjadi</p>
-              <button class="text-success text-sm font-medium mt-2 hover:underline">Lihat Detail</button>
+              <h4 class="font-medium text-gray-900 text-sm lg:text-base">Transaksi Besar</h4>
+              <p class="text-xs lg:text-sm text-gray-600 mt-1">Transaksi Rp 2.500.000 baru saja terjadi</p>
+              <button class="text-success text-xs lg:text-sm font-medium mt-2 hover:underline">Lihat Detail</button>
             </div>
           </div>
 
           <!-- Prediksi Keuangan -->
-          <div class="flex items-start p-4 bg-primary/10 rounded-lg">
-            <span class="material-icons text-primary mr-3">insights</span>
+          <div class="flex items-start p-3 lg:p-4 bg-primary/10 rounded-lg">
+            <span class="material-icons text-primary mr-2 lg:mr-3 text-lg lg:text-xl">insights</span>
             <div>
-              <h4 class="font-medium text-gray-900">Prediksi Keuangan</h4>
-              <p class="text-sm text-gray-600 mt-1">Pemasukan diperkirakan naik 15% bulan depan</p>
-              <button class="text-primary text-sm font-medium mt-2 hover:underline">Lihat Analisis</button>
+              <h4 class="font-medium text-gray-900 text-sm lg:text-base">Prediksi Keuangan</h4>
+              <p class="text-xs lg:text-sm text-gray-600 mt-1">Pemasukan diperkirakan naik 15% bulan depan</p>
+              <button class="text-primary text-xs lg:text-sm font-medium mt-2 hover:underline">Lihat Analisis</button>
             </div>
           </div>
         </div>
@@ -228,383 +295,161 @@
     </div>
 
     <!-- Quick Actions dan Produk Terlaris -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
       <!-- Quick Actions -->
-      <div class="bg-white rounded-lg shadow-sm p-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h2>
-        <div class="grid grid-cols-2 gap-4">
-          <button class="flex items-center justify-center space-x-2 p-4 bg-primary/5 rounded-lg hover:bg-primary/10 transition-colors">
-            <span class="material-icons text-primary">add_shopping_cart</span>
-            <span class="text-primary font-medium">Transaksi Baru</span>
+      <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6">
+        <h2 class="text-base lg:text-lg font-semibold text-gray-800 mb-4">Quick Actions</h2>
+        <div class="grid grid-cols-2 gap-3 lg:gap-4">
+          <button class="flex items-center justify-center space-x-2 p-3 lg:p-4 bg-primary/5 rounded-lg hover:bg-primary/10 transition-colors">
+            <span class="material-icons text-primary text-lg lg:text-xl">add_shopping_cart</span>
+            <span class="text-primary font-medium text-sm lg:text-base">Transaksi Baru</span>
           </button>
-          <button class="flex items-center justify-center space-x-2 p-4 bg-success/5 rounded-lg hover:bg-success/10 transition-colors">
-            <span class="material-icons text-success">inventory_2</span>
-            <span class="text-success font-medium">Tambah Produk</span>
+          <button class="flex items-center justify-center space-x-2 p-3 lg:p-4 bg-success/5 rounded-lg hover:bg-success/10 transition-colors">
+            <span class="material-icons text-success text-lg lg:text-xl">inventory_2</span>
+            <span class="text-success font-medium text-sm lg:text-base">Tambah Produk</span>
           </button>
-          <button class="flex items-center justify-center space-x-2 p-4 bg-warning/5 rounded-lg hover:bg-warning/10 transition-colors">
-            <span class="material-icons text-warning">assessment</span>
-            <span class="text-warning font-medium">Laporan</span>
+          <button class="flex items-center justify-center space-x-2 p-3 lg:p-4 bg-warning/5 rounded-lg hover:bg-warning/10 transition-colors">
+            <span class="material-icons text-warning text-lg lg:text-xl">assessment</span>
+            <span class="text-warning font-medium text-sm lg:text-base">Laporan</span>
           </button>
-          <button class="flex items-center justify-center space-x-2 p-4 bg-danger/5 rounded-lg hover:bg-danger/10 transition-colors">
-            <span class="material-icons text-danger">print</span>
-            <span class="text-danger font-medium">Cetak Laporan</span>
+          <button class="flex items-center justify-center space-x-2 p-3 lg:p-4 bg-danger/5 rounded-lg hover:bg-danger/10 transition-colors">
+            <span class="material-icons text-danger text-lg lg:text-xl">print</span>
+            <span class="text-danger font-medium text-sm lg:text-base">Cetak Laporan</span>
           </button>
-        </div>
-      </div>
-
-      <!-- Produk Terlaris -->
-      <div class="bg-white rounded-lg shadow-sm p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold text-gray-800">Produk Terlaris</h2>
-          <button class="text-primary text-sm font-medium hover:underline">Lihat Semua</button>
-        </div>
-        <div class="space-y-4">
-          <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-            <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                <span class="material-icons text-primary">inventory_2</span>
-              </div>
-              <div>
-                <h4 class="font-medium text-gray-900">Produk A</h4>
-                <p class="text-sm text-gray-500">Terjual 150 unit</p>
-              </div>
-            </div>
-            <span class="text-success font-medium">+12.5%</span>
-          </div>
-          <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-            <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                <span class="material-icons text-primary">inventory_2</span>
-              </div>
-              <div>
-                <h4 class="font-medium text-gray-900">Produk B</h4>
-                <p class="text-sm text-gray-500">Terjual 120 unit</p>
-              </div>
-            </div>
-            <span class="text-success font-medium">+8.3%</span>
-          </div>
-          <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-            <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                <span class="material-icons text-primary">inventory_2</span>
-              </div>
-              <div>
-                <h4 class="font-medium text-gray-900">Produk C</h4>
-                <p class="text-sm text-gray-500">Terjual 95 unit</p>
-              </div>
-            </div>
-            <span class="text-danger font-medium">-2.1%</span>
-          </div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
   <script>
-    // Fungsi untuk format mata uang
-    function formatCurrency(amount) {
-      return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR'
-      }).format(amount);
-    }
+    // Mobile Menu Toggle
+    const mobileMenuButton = document.getElementById('mobileMenuButton');
+    const mobileMenu = document.querySelector('.mobile-menu');
+    const overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 bg-black/50 z-30 hidden';
+    document.body.appendChild(overlay);
 
-    // Fungsi untuk menghitung persentase perubahan
-    function calculatePercentageChange(current, previous) {
-      if (previous === 0) return 100;
-      return ((current - previous) / previous) * 100;
-    }
-
-    // Fungsi untuk update Quick Stats
-    function updateQuickStats() {
-      // Ambil data dari localStorage
-      const transactions = JSON.parse(localStorage.getItem('transaksi')) || [];
-      const products = JSON.parse(localStorage.getItem('products')) || [];
-      
-      // Hitung total saldo
-      const totalBalance = transactions.reduce((acc, curr) => {
-        return acc + (curr.type === 'income' ? curr.amount : -curr.amount);
-      }, 0);
-
-      // Hitung total pemasukan bulan ini
-      const currentMonth = new Date().getMonth();
-      const currentYear = new Date().getFullYear();
-      const monthlyIncome = transactions
-        .filter(t => {
-          const date = new Date(t.date);
-          return t.type === 'income' && 
-                 date.getMonth() === currentMonth && 
-                 date.getFullYear() === currentYear;
-        })
-        .reduce((acc, curr) => acc + curr.amount, 0);
-
-      // Hitung total pengeluaran bulan ini
-      const monthlyExpense = transactions
-        .filter(t => {
-          const date = new Date(t.date);
-          return t.type === 'expense' && 
-                 date.getMonth() === currentMonth && 
-                 date.getFullYear() === currentYear;
-        })
-        .reduce((acc, curr) => acc + curr.amount, 0);
-
-      // Hitung transaksi hari ini
-      const today = new Date().toDateString();
-      const todayTransactions = transactions.filter(t => 
-        new Date(t.date).toDateString() === today
-      ).length;
-
-      // Update tampilan
-      document.querySelector('[data-stat="balance"]').textContent = formatCurrency(totalBalance);
-      document.querySelector('[data-stat="income"]').textContent = formatCurrency(monthlyIncome);
-      document.querySelector('[data-stat="expense"]').textContent = formatCurrency(monthlyExpense);
-      document.querySelector('[data-stat="transactions"]').textContent = todayTransactions;
-
-      // Update persentase perubahan
-      updatePercentageChanges();
-    }
-
-    // Fungsi untuk update persentase perubahan
-    function updatePercentageChanges() {
-      const transactions = JSON.parse(localStorage.getItem('transaksi')) || [];
-      const currentMonth = new Date().getMonth();
-      const currentYear = new Date().getFullYear();
-      const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-      const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-
-      // Hitung pemasukan bulan ini dan bulan lalu
-      const currentMonthIncome = transactions
-        .filter(t => {
-          const date = new Date(t.date);
-          return t.type === 'income' && 
-                 date.getMonth() === currentMonth && 
-                 date.getFullYear() === currentYear;
-        })
-        .reduce((acc, curr) => acc + curr.amount, 0);
-
-      const previousMonthIncome = transactions
-        .filter(t => {
-          const date = new Date(t.date);
-          return t.type === 'income' && 
-                 date.getMonth() === previousMonth && 
-                 date.getFullYear() === previousYear;
-        })
-        .reduce((acc, curr) => acc + curr.amount, 0);
-
-      // Update persentase pemasukan
-      const incomeChange = calculatePercentageChange(currentMonthIncome, previousMonthIncome);
-      const incomeChangeElement = document.querySelector('[data-stat="income-change"]');
-      incomeChangeElement.textContent = `${incomeChange >= 0 ? '+' : ''}${incomeChange.toFixed(1)}%`;
-      incomeChangeElement.className = `text-sm font-medium ${incomeChange >= 0 ? 'text-success' : 'text-danger'}`;
-
-      // Lakukan hal yang sama untuk pengeluaran
-      // ... (implementasi serupa untuk pengeluaran)
-    }
-
-    // Fungsi untuk update grafik
-    function updateChart(period = 'week') {
-      const transactions = JSON.parse(localStorage.getItem('transaksi')) || [];
-      let labels = [];
-      let incomeData = [];
-      let expenseData = [];
-
-      const now = new Date();
-      let startDate;
-
-      switch(period) {
-        case 'week':
-          startDate = new Date(now.setDate(now.getDate() - 7));
-          labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-          break;
-        case 'month':
-          startDate = new Date(now.setMonth(now.getMonth() - 1));
-          labels = Array.from({length: 30}, (_, i) => `${i + 1}`);
-          break;
-        case 'year':
-          startDate = new Date(now.setFullYear(now.getFullYear() - 1));
-          labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-          break;
-      }
-
-      // Filter dan proses data transaksi
-      const filteredTransactions = transactions.filter(t => new Date(t.date) >= startDate);
-      
-      // Proses data untuk grafik
-      // ... (implementasi pengolahan data untuk grafik)
-
-      // Update grafik
-      financeChart.data.labels = labels;
-      financeChart.data.datasets[0].data = incomeData;
-      financeChart.data.datasets[1].data = expenseData;
-      financeChart.update();
-    }
-
-    // Fungsi untuk update alert dan notifikasi
-    function updateAlerts() {
-      const products = JSON.parse(localStorage.getItem('products')) || [];
-      const transactions = JSON.parse(localStorage.getItem('transaksi')) || [];
-      
-      // Cek stok menipis
-      const lowStockProducts = products.filter(p => p.stock <= p.minStock);
-      const lowStockAlert = document.querySelector('[data-alert="low-stock"]');
-      if (lowStockProducts.length > 0) {
-        lowStockAlert.querySelector('p').textContent = 
-          `${lowStockProducts.length} produk dengan stok di bawah minimum`;
-        lowStockAlert.style.display = 'flex';
-      } else {
-        lowStockAlert.style.display = 'none';
-      }
-
-      // Cek transaksi besar
-      const today = new Date().toDateString();
-      const largeTransactions = transactions.filter(t => 
-        new Date(t.date).toDateString() === today && 
-        t.amount > 1000000
-      );
-      
-      const largeTransactionAlert = document.querySelector('[data-alert="large-transaction"]');
-      if (largeTransactions.length > 0) {
-        const latestLarge = largeTransactions[largeTransactions.length - 1];
-        largeTransactionAlert.querySelector('p').textContent = 
-          `Transaksi ${formatCurrency(latestLarge.amount)} baru saja terjadi`;
-        largeTransactionAlert.style.display = 'flex';
-      } else {
-        largeTransactionAlert.style.display = 'none';
-      }
-
-      // Prediksi keuangan (contoh sederhana)
-      const monthlyIncome = transactions
-        .filter(t => t.type === 'income')
-        .reduce((acc, curr) => acc + curr.amount, 0);
-      
-      const predictionAlert = document.querySelector('[data-alert="prediction"]');
-      const prediction = monthlyIncome * 1.15; // Contoh prediksi naik 15%
-      predictionAlert.querySelector('p').textContent = 
-        `Pemasukan diperkirakan ${formatCurrency(prediction)} bulan depan`;
-    }
-
-    // Fungsi untuk update produk terlaris
-    function updateTopProducts() {
-      const products = JSON.parse(localStorage.getItem('products')) || [];
-      const transactions = JSON.parse(localStorage.getItem('transaksi')) || [];
-      
-      // Hitung penjualan per produk
-      const productSales = products.map(product => {
-        const sales = transactions
-          .filter(t => t.productId === product.id)
-          .reduce((acc, curr) => acc + curr.quantity, 0);
-        
-        return {
-          ...product,
-          sales
-        };
-      });
-
-      // Urutkan berdasarkan penjualan
-      const topProducts = productSales
-        .sort((a, b) => b.sales - a.sales)
-        .slice(0, 3);
-
-      // Update tampilan
-      const topProductsContainer = document.querySelector('[data-section="top-products"]');
-      topProductsContainer.innerHTML = topProducts.map((product, index) => `
-        <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-              <span class="material-icons text-primary">inventory_2</span>
-            </div>
-            <div>
-              <h4 class="font-medium text-gray-900">${product.name}</h4>
-              <p class="text-sm text-gray-500">Terjual ${product.sales} unit</p>
-            </div>
-          </div>
-          <span class="text-success font-medium">+${(Math.random() * 20).toFixed(1)}%</span>
-        </div>
-      `).join('');
-    }
-
-    // Fungsi untuk menangani navigasi
-    function handleNavigation() {
-      const currentPage = window.location.pathname.split('/').pop();
-      const navLinks = document.querySelectorAll('nav a');
-      
-      navLinks.forEach(link => {
-        const linkHref = link.getAttribute('href');
-        if (linkHref === currentPage) {
-          link.classList.add('bg-white/20');
-        } else {
-          link.classList.remove('bg-white/20');
-        }
-      });
-    }
-
-    // Fungsi untuk mengecek status login
-    function checkAuth() {
-      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-      if (!currentUser) {
-        window.location.href = 'login.html';
-        return;
-      }
-      
-      // Update nama pengguna di header jika ada
-      const userNameElement = document.querySelector('[data-user="name"]');
-      if (userNameElement) {
-        userNameElement.textContent = currentUser.name || currentUser.email;
-      }
-    }
-
-    // Fungsi untuk logout
-    function handleLogout() {
-      localStorage.removeItem('currentUser');
-      window.location.href = 'login.html';
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      // Cek status login
-      checkAuth();
-
-      // Event listener untuk tombol logout
-      const logoutButton = document.querySelector('button');
-      if (logoutButton) {
-        logoutButton.addEventListener('click', handleLogout);
-      }
-
-      // Update semua data saat halaman dimuat
-      updateQuickStats();
-      updateChart();
-      updateAlerts();
-      updateTopProducts();
-
-      // Event listener untuk filter periode
-      document.querySelector('select').addEventListener('change', (e) => {
-        updateChart(e.target.value);
-      });
-
-      // Event listener untuk tombol refresh
-      document.querySelector('[data-action="refresh"]').addEventListener('click', () => {
-        updateQuickStats();
-        updateChart();
-        updateAlerts();
-        updateTopProducts();
-      });
-
-      // Event listener untuk quick actions
-      document.querySelector('[data-action="new-transaction"]').addEventListener('click', () => {
-        window.location.href = 'transaksi.html';
-      });
-
-      document.querySelector('[data-action="add-product"]').addEventListener('click', () => {
-        window.location.href = 'produk.html';
-      });
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('active');
+      overlay.classList.toggle('hidden');
     });
 
-    // Update data setiap 5 menit
-    setInterval(() => {
-      updateQuickStats();
-      updateChart();
-      updateAlerts();
-      updateTopProducts();
-    }, 300000);
+    overlay.addEventListener('click', () => {
+      mobileMenu.classList.remove('active');
+      overlay.classList.add('hidden');
+    });
+
+    // Chart Initialization
+    const ctx = document.getElementById('financeChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
+        datasets: [{
+          label: 'Pemasukan',
+          data: [12000000, 19000000, 15000000, 25000000, 22000000, 30000000],
+          borderColor: '#10B981',
+          tension: 0.4
+        }, {
+          label: 'Pengeluaran',
+          data: [8000000, 12000000, 9000000, 15000000, 13000000, 20000000],
+          borderColor: '#EF4444',
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return 'Rp ' + value.toLocaleString('id-ID');
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Fungsi untuk menampilkan loading
+    function showLoading() {
+      document.getElementById('loadingOverlay').classList.add('active');
+    }
+
+    // Fungsi untuk menyembunyikan loading
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
+    // Fungsi untuk menampilkan skeleton loading
+    function showSkeletonLoading() {
+      const cards = document.querySelectorAll('.card');
+      cards.forEach(card => {
+        card.innerHTML = `
+          <div class="skeleton h-24 rounded-lg"></div>
+        `;
+      });
+    }
+
+    // Fungsi untuk memuat data dashboard
+    async function loadDashboardData() {
+      try {
+        showLoading();
+        showSkeletonLoading();
+        
+        // Simulasi delay loading data
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Load data dari localStorage
+        const produk = JSON.parse(localStorage.getItem('produk')) || [];
+        const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
+        
+        // Update card data
+        document.getElementById('totalProduk').textContent = produk.length;
+        document.getElementById('totalTransaksi').textContent = transaksi.length;
+        
+        // Hitung total pendapatan
+        const totalPendapatan = transaksi.reduce((total, t) => {
+          return total + (t.jenis === 'masuk' ? t.jumlah : 0);
+        }, 0);
+        document.getElementById('totalPendapatan').textContent = `Rp ${totalPendapatan.toLocaleString('id-ID')}`;
+        
+        // Hitung total pengeluaran
+        const totalPengeluaran = transaksi.reduce((total, t) => {
+          return total + (t.jenis === 'keluar' ? t.jumlah : 0);
+        }, 0);
+        document.getElementById('totalPengeluaran').textContent = `Rp ${totalPengeluaran.toLocaleString('id-ID')}`;
+        
+        // Update grafik
+        updateChart(transaksi);
+        
+        // Update tabel
+        updateTable(transaksi);
+        
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        alert('Gagal memuat data dashboard');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Panggil fungsi load data saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDashboardData();
+    });
   </script>
 </body>
 </html>

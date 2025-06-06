@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>KeuTrack - Laporan Keuangan</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
@@ -25,11 +25,78 @@
       }
     }
   </script>
+  <style>
+    @media (max-width: 768px) {
+      .mobile-menu {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+      }
+      .mobile-menu.active {
+        transform: translateX(0);
+      }
+    }
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #2c3e50;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+    }
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+  </style>
 </head>
 <body class="bg-gray-50 font-sans">
+  <!-- Mobile Header -->
+  <div class="lg:hidden fixed top-0 left-0 right-0 bg-primary text-white p-4 z-50">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button id="mobileMenuButton" class="text-white">
+          <span class="material-icons">menu</span>
+        </button>
+        <img src="./images/LOGO KT.svg" alt="KeuTrack Logo" class="w-10 h-10">
+        <span class="text-xl font-semibold">KeuTrack</span>
+      </div>
+      <button class="text-white">
+        <span class="material-icons">notifications</span>
+      </button>
+    </div>
+  </div>
+
   <!-- Sidebar -->
-  <div class="fixed inset-y-0 left-0 w-64 bg-primary text-white">
-    <div class="p-6">
+  <div class="fixed inset-y-0 left-0 w-64 bg-primary text-white mobile-menu lg:translate-x-0 z-40">
+    <div class="p-6 hidden lg:block">
       <div class="flex items-center space-x-4">
         <img src="./images/LOGO KT.svg" alt="KeuTrack Logo" class="w-[70px] h-[70px]">
         <span class="text-2xl font-semibold mt-1">KeuTrack</span>
@@ -84,68 +151,68 @@
   </div>
 
   <!-- Main Content -->
-  <div class="ml-64 p-8">
+  <div class="lg:ml-64 p-4 lg:p-8 mt-16 lg:mt-0">
     <!-- Header -->
-    <div class="bg-primary text-white rounded-lg p-6 mb-8">
-      <h1 class="text-2xl font-semibold">Laporan Keuangan</h1>
-      <p class="text-white/80 mt-1">Lihat berbagai laporan keuangan bisnismu</p>
+    <div class="bg-primary text-white rounded-lg p-4 lg:p-6 mb-6 lg:mb-8">
+      <h1 class="text-xl lg:text-2xl font-semibold">Laporan Keuangan</h1>
+      <p class="text-white/80 mt-1 text-sm lg:text-base">Lihat berbagai laporan keuangan bisnismu</p>
     </div>
 
     <!-- Filter Tanggal -->
-    <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
-      <h2 class="text-xl font-semibold text-gray-800 mb-4">Filter Laporan</h2>
-      <div class="flex flex-wrap items-center gap-4">
-        <div>
+    <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6 mb-6 lg:mb-8">
+      <h2 class="text-lg lg:text-xl font-semibold text-gray-800 mb-4">Filter Laporan</h2>
+      <div class="flex flex-col lg:flex-row lg:flex-wrap items-start lg:items-center gap-4">
+        <div class="w-full lg:w-auto">
           <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai:</label>
-          <input type="date" id="startDate" class="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors">
+          <input type="date" id="startDate" class="w-full lg:w-auto px-3 lg:px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors text-sm">
         </div>
-        <div>
+        <div class="w-full lg:w-auto">
           <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir:</label>
-          <input type="date" id="endDate" class="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors">
+          <input type="date" id="endDate" class="w-full lg:w-auto px-3 lg:px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors text-sm">
         </div>
-        <button id="applyFilter" class="mt-5 bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors focus:ring-2 focus:ring-primary/20">
+        <button id="applyFilter" class="w-full lg:w-auto mt-2 lg:mt-5 bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors focus:ring-2 focus:ring-primary/20 text-sm">
           Tampilkan Laporan
         </button>
       </div>
     </div>
 
     <!-- Ringkasan Laba Rugi -->
-    <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
-      <h2 class="text-xl font-semibold text-gray-800 mb-4">Ringkasan Laba Rugi</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6 mb-6 lg:mb-8">
+      <h2 class="text-lg lg:text-xl font-semibold text-gray-800 mb-4">Ringkasan Laba Rugi</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div class="border p-4 rounded-lg">
           <h3 class="text-sm font-medium text-gray-500">Total Pemasukan</h3>
-          <p id="reportTotalPemasukan" class="text-xl font-semibold text-green-600">Rp 0</p>
+          <p id="reportTotalPemasukan" class="text-lg lg:text-xl font-semibold text-green-600">Rp 0</p>
         </div>
         <div class="border p-4 rounded-lg">
           <h3 class="text-sm font-medium text-gray-500">Total Pengeluaran</h3>
-          <p id="reportTotalPengeluaran" class="text-xl font-semibold text-red-600">Rp 0</p>
+          <p id="reportTotalPengeluaran" class="text-lg lg:text-xl font-semibold text-red-600">Rp 0</p>
         </div>
-        <div class="border p-4 rounded-lg">
+        <div class="border p-4 rounded-lg sm:col-span-2 lg:col-span-1">
           <h3 class="text-sm font-medium text-gray-500">Laba/Rugi</h3>
-          <p id="reportLabaRugi" class="text-xl font-semibold text-blue-600">Rp 0</p>
+          <p id="reportLabaRugi" class="text-lg lg:text-xl font-semibold text-blue-600">Rp 0</p>
         </div>
       </div>
     </div>
 
     <!-- Grafik Tren Keuangan -->
-    <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
-      <h2 class="text-xl font-semibold text-gray-800 mb-4">Grafik Tren Keuangan</h2>
-      <div class="h-80">
+    <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6 mb-6 lg:mb-8">
+      <h2 class="text-lg lg:text-xl font-semibold text-gray-800 mb-4">Grafik Tren Keuangan</h2>
+      <div class="h-60 lg:h-80">
         <canvas id="reportFinanceChart"></canvas>
       </div>
     </div>
 
     <!-- Laporan Penjualan Produk -->
-    <div class="bg-white rounded-lg shadow-sm p-6">
-      <h2 class="text-xl font-semibold text-gray-800 mb-4">Laporan Penjualan Produk</h2>
+    <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6">
+      <h2 class="text-lg lg:text-xl font-semibold text-gray-800 mb-4">Laporan Penjualan Produk</h2>
       <div class="overflow-x-auto">
         <table class="min-w-full bg-white rounded-lg overflow-hidden">
           <thead class="bg-gray-50">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Produk</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Terjual</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Pendapatan</th>
+              <th class="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Produk</th>
+              <th class="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Terjual</th>
+              <th class="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Pendapatan</th>
             </tr>
           </thead>
           <tbody id="productSalesTableBody" class="divide-y divide-gray-200">
@@ -154,12 +221,33 @@
         </table>
         <div id="noProductSalesData" class="text-center text-gray-500 mt-4 hidden">Tidak ada data penjualan produk dalam periode ini.</div>
       </div>
+      </div>
     </div>
 
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
+    // Mobile Menu Toggle
+    const mobileMenuButton = document.getElementById('mobileMenuButton');
+    const mobileMenu = document.querySelector('.mobile-menu');
+    const overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 bg-black/50 z-30 hidden';
+    document.body.appendChild(overlay);
+
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('active');
+      overlay.classList.toggle('hidden');
+    });
+
+    overlay.addEventListener('click', () => {
+      mobileMenu.classList.remove('active');
+      overlay.classList.add('hidden');
+    });
+
     // Fungsi untuk format mata uang
     function formatCurrency(amount) {
       return new Intl.NumberFormat('id-ID', {
@@ -176,6 +264,52 @@
     // Fungsi untuk mengambil produk dari localStorage
     function getProducts() {
       return JSON.parse(localStorage.getItem('produk')) || [];
+    }
+
+    // Fungsi untuk menampilkan loading
+    function showLoading() {
+      document.getElementById('loadingOverlay').classList.add('active');
+    }
+
+    // Fungsi untuk menyembunyikan loading
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
+    // Fungsi untuk menampilkan skeleton loading
+    function showSkeletonLoading() {
+      // Skeleton untuk summary cards
+      const summaryCards = document.querySelectorAll('.summary-card');
+      summaryCards.forEach(card => {
+        card.innerHTML = `
+          <div class="skeleton h-24 rounded-lg"></div>
+        `;
+      });
+
+      // Skeleton untuk grafik
+      const chartContainer = document.getElementById('chartContainer');
+      chartContainer.innerHTML = `
+        <div class="skeleton h-64 rounded-lg"></div>
+      `;
+
+      // Skeleton untuk tabel
+      const tbody = document.querySelector('tbody');
+      tbody.innerHTML = Array(5).fill(`
+        <tr>
+          <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap">
+            <div class="skeleton h-4 w-32"></div>
+          </td>
+          <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap">
+            <div class="skeleton h-4 w-24"></div>
+          </td>
+          <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap">
+            <div class="skeleton h-4 w-24"></div>
+          </td>
+          <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap">
+            <div class="skeleton h-4 w-24"></div>
+          </td>
+        </tr>
+      `).join('');
     }
 
     // Fungsi untuk menampilkan laporan
@@ -263,18 +397,10 @@
           plugins: {
             legend: {
               position: 'top',
-            },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  let label = context.dataset.label || '';
-                  if (label) {
-                    label += ': ';
-                  }
-                  if (context.parsed.y !== null) {
-                    label += formatCurrency(context.parsed.y);
-                  }
-                  return label;
+              labels: {
+                font: {
+                  family: 'Poppins',
+                  size: 12
                 }
               }
             }
@@ -283,9 +409,23 @@
             y: {
               beginAtZero: true,
               ticks: {
+                font: {
+                  family: 'Poppins',
+                  size: 10
+                },
                 callback: function(value) {
-                  return formatCurrency(value).replace('Rp', '').trim(); // Clean up for axis
+                  return formatCurrency(value);
                 }
+              }
+            },
+            x: {
+              ticks: {
+                font: {
+                  family: 'Poppins',
+                  size: 10
+                },
+                maxRotation: 45,
+                minRotation: 45
               }
             }
           }
@@ -295,114 +435,140 @@
       // Generate Laporan Penjualan Produk
       const productSales = {};
       filteredTransactions
-        .filter(t => t.type === 'masuk' && t.productId) // Hanya transaksi pemasukan dengan produk
+        .filter(t => t.type === 'masuk')
         .forEach(t => {
-          const productId = t.productId;
-          const quantity = t.quantity;
-          const total = t.total;
-
-          if (!productSales[productId]) {
-            productSales[productId] = { quantity: 0, total: 0 };
+          const product = products.find(p => p.id === t.productId);
+          if (product) {
+            if (!productSales[product.id]) {
+              productSales[product.id] = {
+                name: product.name,
+                quantity: 0,
+                total: 0
+              };
+            }
+            productSales[product.id].quantity += t.quantity;
+            productSales[product.id].total += t.total;
           }
-          productSales[productId].quantity += quantity;
-          productSales[productId].total += total;
         });
 
-      const productSalesTableBody = document.getElementById('productSalesTableBody');
-      productSalesTableBody.innerHTML = '';
-      const noProductSalesData = document.getElementById('noProductSalesData');
+      const tableBody = document.getElementById('productSalesTableBody');
+      tableBody.innerHTML = '';
+      const noDataDiv = document.getElementById('noProductSalesData');
 
-      const sortedProductIds = Object.keys(productSales).sort((a, b) => productSales[b].total - productSales[a].total); // Urutkan berdasarkan total pendapatan
-
-      if (sortedProductIds.length === 0) {
-        noProductSalesData.classList.remove('hidden');
+      if (Object.keys(productSales).length === 0) {
+        noDataDiv.classList.remove('hidden');
       } else {
-        noProductSalesData.classList.add('hidden');
-        sortedProductIds.forEach(productId => {
-          const product = products.find(p => p.id === parseInt(productId));
-          if (product) {
-            const tr = document.createElement('tr');
-            tr.className = 'hover:bg-gray-50';
-            tr.innerHTML = `
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${product.name}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${productSales[productId].quantity}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatCurrency(productSales[productId].total)}</td>
-            `;
-            productSalesTableBody.appendChild(tr);
-          }
+        noDataDiv.classList.add('hidden');
+        Object.values(productSales).forEach(sale => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td class="px-3 lg:px-6 py-2 lg:py-3 text-sm">${sale.name}</td>
+            <td class="px-3 lg:px-6 py-2 lg:py-3 text-sm">${sale.quantity}</td>
+            <td class="px-3 lg:px-6 py-2 lg:py-3 text-sm">${formatCurrency(sale.total)}</td>
+          `;
+          tableBody.appendChild(row);
         });
       }
     }
 
-    // Event listener untuk tombol Tampilkan Laporan
+    // Event Listeners
     document.getElementById('applyFilter').addEventListener('click', () => {
-      const startDateInput = document.getElementById('startDate').value;
-      const endDateInput = document.getElementById('endDate').value;
-
-      if (startDateInput && endDateInput) {
-        const startDate = new Date(startDateInput);
-        const endDate = new Date(endDateInput);
-        generateReport(startDate, endDate);
-      } else {
-        alert('Mohon pilih tanggal mulai dan tanggal akhir.');
-      }
-    });
-
-    // Generate laporan untuk bulan ini saat halaman dimuat
-    document.addEventListener('DOMContentLoaded', () => {
-      const today = new Date();
-      const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      const startDate = new Date(document.getElementById('startDate').value);
+      const endDate = new Date(document.getElementById('endDate').value);
       
-      // Set default filter tanggal ke bulan ini
-      document.getElementById('startDate').value = firstDayOfMonth.toISOString().split('T')[0];
-      document.getElementById('endDate').value = lastDayOfMonth.toISOString().split('T')[0];
-
-      generateReport(firstDayOfMonth, lastDayOfMonth);
-
-      // Tambahkan event listener untuk semua link di sidebar
-      document.querySelectorAll('nav a').forEach(link => {
-        link.addEventListener('click', function(e) {
-          // Hapus class active dari semua link
-          document.querySelectorAll('nav a').forEach(l => {
-            l.classList.remove('bg-white/20');
-          });
-          // Tambahkan class active ke link yang diklik
-          this.classList.add('bg-white/20');
-        });
-      });
-
-      // Fungsi untuk mengecek status login
-      function checkAuth() {
-        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        if (!currentUser) {
-          window.location.href = 'login.html';
-          return;
-        }
-        
-        // Update nama pengguna di header jika ada
-        const userNameElement = document.querySelector('[data-user="name"]');
-        if (userNameElement) {
-          userNameElement.textContent = currentUser.name || currentUser.email;
-        }
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        alert('Mohon pilih tanggal mulai dan tanggal akhir');
+        return;
       }
-
-      // Fungsi untuk logout
-      function handleLogout() {
-        localStorage.removeItem('currentUser');
-        window.location.href = 'login.html';
-      }
-
-      // Cek status login
-      checkAuth();
-
-      // Event listener untuk tombol logout
-      const logoutButton = document.querySelector('button');
-      if (logoutButton) {
-        logoutButton.addEventListener('click', handleLogout);
-      }
+      
+      generateReport(startDate, endDate);
     });
 
+    // Set default date range (current month)
+      const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    
+    document.getElementById('startDate').valueAsDate = firstDay;
+    document.getElementById('endDate').valueAsDate = lastDay;
+    
+    // Generate initial report
+    generateReport(firstDay, lastDay);
+
+    // Fungsi untuk memuat data laporan
+    async function loadLaporanData() {
+      try {
+        showLoading();
+        showSkeletonLoading();
+        
+        // Simulasi delay loading data
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Load data dari localStorage
+        const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
+        const produk = JSON.parse(localStorage.getItem('produk')) || [];
+        
+        // Hitung summary
+        const totalPendapatan = transaksi.reduce((total, t) => {
+          return total + (t.jenis === 'masuk' ? t.total : 0);
+        }, 0);
+        
+        const totalPengeluaran = transaksi.reduce((total, t) => {
+          return total + (t.jenis === 'keluar' ? t.total : 0);
+        }, 0);
+        
+        const laba = totalPendapatan - totalPengeluaran;
+        
+        // Update summary cards
+        document.getElementById('totalPendapatan').textContent = `Rp ${totalPendapatan.toLocaleString('id-ID')}`;
+        document.getElementById('totalPengeluaran').textContent = `Rp ${totalPengeluaran.toLocaleString('id-ID')}`;
+        document.getElementById('laba').textContent = `Rp ${laba.toLocaleString('id-ID')}`;
+        
+        // Update grafik
+        updateChart(transaksi);
+        
+        // Update tabel
+        updateTable(produk, transaksi);
+        
+      } catch (error) {
+        console.error('Error loading laporan data:', error);
+        alert('Gagal memuat data laporan');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Fungsi untuk update grafik
+    function updateChart(transaksi) {
+      // Implementasi update grafik
+      const chartContainer = document.getElementById('chartContainer');
+      // ... kode untuk update grafik ...
+    }
+
+    // Fungsi untuk update tabel
+    function updateTable(produk, transaksi) {
+      const tbody = document.querySelector('tbody');
+      tbody.innerHTML = produk.map(p => {
+        const penjualan = transaksi.filter(t => t.produk === p.nama && t.jenis === 'masuk')
+          .reduce((total, t) => total + t.jumlah, 0);
+        const pendapatan = transaksi.filter(t => t.produk === p.nama && t.jenis === 'masuk')
+          .reduce((total, t) => total + t.total, 0);
+        
+        return `
+          <tr class="hover:bg-gray-50">
+            <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">${p.nama}</td>
+            <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">${penjualan}</td>
+            <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">Rp ${pendapatan.toLocaleString('id-ID')}</td>
+            <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">${p.stok}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Panggil fungsi load data saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', () => {
+      loadLaporanData();
+    });
   </script>
 </body>
 </html> 

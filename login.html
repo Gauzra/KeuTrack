@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KeuTrack - Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
@@ -27,23 +27,71 @@
             }
         }
     </script>
+    <style>
+        /* Tambahan CSS untuk mobile optimization */
+        @media (max-width: 640px) {
+            .mobile-padding {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            .mobile-text {
+                font-size: 1.25rem;
+            }
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .loading-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2c3e50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body class="bg-gray-50 font-sans">
-    <div class="min-h-screen flex items-center justify-center">
-        <div class="max-w-md w-full mx-4">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md mx-auto">
             <!-- Logo dan Judul -->
-            <div class="text-center mb-8">
+            <div class="text-center mb-6">
                 <div class="flex justify-center mb-4">
-                    <img src="./images/LOGO KT.svg" alt="KeuTrack Logo" class="w-[120px] h-[120px]">
+                    <img src="./images/LOGO KT.svg" alt="KeuTrack Logo" class="w-24 h-24 sm:w-[120px] sm:h-[120px]">
                 </div>
-                <h1 class="text-3xl font-semibold text-gray-900">Selamat Datang di KeuTrack</h1>
-                <p class="text-gray-600 mt-2">Masuk untuk mengelola keuangan bisnismu</p>
+                <h1 class="text-2xl sm:text-3xl font-semibold text-gray-900 mobile-text">Selamat Datang di KeuTrack</h1>
+                <p class="text-sm sm:text-base text-gray-600 mt-2">Masuk untuk mengelola keuangan bisnismu</p>
             </div>
 
             <!-- Login Container -->
-            <div class="bg-white rounded-lg shadow-sm p-8">
+            <div class="bg-white rounded-lg shadow-sm p-4 sm:p-8 mobile-padding">
                 <!-- Google Sign-In Button -->
-                <div class="space-y-6">
+                <div class="space-y-4 sm:space-y-6">
                     <div id="g_id_onload"
                          data-client_id="109474537566-johb2fn97km03he16s3cump2k0lf63ht.apps.googleusercontent.com"
                          data-context="signin"
@@ -63,8 +111,8 @@
                 </div>
 
                 <!-- Informasi -->
-                <div class="mt-6 text-center">
-                    <p class="text-sm text-gray-600">
+                <div class="mt-4 sm:mt-6 text-center">
+                    <p class="text-xs sm:text-sm text-gray-600">
                         Dengan masuk menggunakan Google, Anda menyetujui
                         <a href="#" class="text-primary hover:underline">Syarat dan Ketentuan</a>
                         serta
@@ -103,6 +151,47 @@
             }).join(''));
 
             return JSON.parse(jsonPayload);
+        }
+
+        // Fungsi untuk menampilkan loading
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.add('active');
+        }
+
+        // Fungsi untuk menyembunyikan loading
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+
+        // Fungsi untuk handle login
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                showLoading();
+                
+                // Simulasi delay login
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Simpan data user ke localStorage
+                localStorage.setItem('currentUser', JSON.stringify({
+                    email: email,
+                    name: email.split('@')[0],
+                    role: 'admin'
+                }));
+
+                // Redirect ke dashboard
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                alert('Login gagal: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+
+            return false;
         }
     </script>
 </body>

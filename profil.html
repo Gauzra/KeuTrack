@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>KeuTrack - Profil</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Poppins', 'sans-serif'],
+          },
+          colors: {
+            primary: '#2c3e50',
+            secondary: '#64748b',
+            success: '#10B981',
+            warning: '#F59E0B',
+            danger: '#EF4444',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @media (max-width: 768px) {
+      .mobile-menu {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+      }
+      .mobile-menu.active {
+        transform: translateX(0);
+      }
+    }
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #2c3e50;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .profile-image {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 4px solid #fff;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .profile-image-upload {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: #2c3e50;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .profile-image-upload:hover {
+      background: #1a2530;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans">
+  <!-- Mobile Header -->
+  <div class="lg:hidden fixed top-0 left-0 right-0 bg-primary text-white p-4 z-50">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button id="mobileMenuButton" class="text-white">
+          <span class="material-icons">menu</span>
+        </button>
+        <img src="./images/LOGO KT.svg" alt="KeuTrack Logo" class="w-10 h-10">
+        <span class="text-xl font-semibold">KeuTrack</span>
+      </div>
+      <button class="text-white">
+        <span class="material-icons">notifications</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="fixed inset-y-0 left-0 w-64 bg-primary text-white mobile-menu lg:translate-x-0 z-40">
+    <div class="p-6 hidden lg:block">
+      <div class="flex items-center space-x-4">
+        <img src="./images/LOGO KT.svg" alt="KeuTrack Logo" class="w-[70px] h-[70px]">
+        <span class="text-2xl font-semibold mt-1">KeuTrack</span>
+      </div>
+    </div>
+    <nav class="mt-6">
+      <ul class="space-y-2 px-4">
+        <li>
+          <a href="dashboard.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">dashboard</span>
+            <span>Dasbor</span>
+          </a>
+        </li>
+        <li>
+          <a href="produk.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">inventory_2</span>
+            <span>Produk/Item</span>
+          </a>
+        </li>
+        <li>
+          <a href="transaksi.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">swap_horiz</span>
+            <span>Transaksi</span>
+          </a>
+        </li>
+        <li>
+          <a href="laporan.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">bar_chart</span>
+            <span>Laporan Keuangan</span>
+          </a>
+        </li>
+        <li>
+          <a href="riwayat-transaksi.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">history</span>
+            <span>Riwayat Transaksi</span>
+          </a>
+        </li>
+        <li>
+          <a href="export.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">cloud_download</span>
+            <span>Export/Backup</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="absolute bottom-0 w-full p-4">
+      <button onclick="handleLogout()" class="flex items-center space-x-3 w-full px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+        <span class="material-icons">logout</span>
+        <span>Log Out</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-4 lg:p-8 mt-16 lg:mt-0">
+    <!-- Header -->
+    <div class="bg-primary text-white rounded-lg p-4 lg:p-6 mb-6 lg:mb-8">
+      <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start space-y-4 lg:space-y-0">
+        <div>
+          <h1 class="text-xl lg:text-2xl font-semibold">Profil</h1>
+          <p class="text-white/80 mt-1 text-sm lg:text-base">Informasi profil pengguna</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Profile Info -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <div class="flex flex-col items-center">
+            <div class="relative">
+              <img id="profileImage" src="./images/default-avatar.png" alt="Profile" class="profile-image">
+              <label for="imageUpload" class="profile-image-upload">
+                <span class="material-icons text-sm">edit</span>
+              </label>
+              <input type="file" id="imageUpload" accept="image/*" class="hidden" onchange="updateProfileImage(event)">
+            </div>
+            <h2 id="userName" class="text-xl font-semibold mt-4">John Doe</h2>
+            <p id="userEmail" class="text-gray-500">john@example.com</p>
+            <p id="userRole" class="text-sm text-gray-500 mt-1">Administrator</p>
+            <p id="joinDate" class="text-sm text-gray-500 mt-1">Bergabung sejak Januari 2024</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preferences -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <div class="space-y-6">
+            <div>
+              <h3 class="text-lg font-semibold mb-4">Preferensi</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Bahasa</label>
+                  <select id="language" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                    <option value="id">Indonesia</option>
+                    <option value="en">English</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Tema</label>
+                  <select id="theme" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Format Tanggal</label>
+                  <select id="dateFormat" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                    <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                    <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                    <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Zona Waktu</label>
+                  <select id="timezone" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                    <option value="Asia/Jakarta">WIB (UTC+7)</option>
+                    <option value="Asia/Makassar">WITA (UTC+8)</option>
+                    <option value="Asia/Jayapura">WIT (UTC+9)</option>
+                  </select>
+                </div>
+                <button onclick="savePreferences()" class="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                  Simpan Preferensi
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <script>
+    // Mobile Menu Toggle
+    const mobileMenuButton = document.getElementById('mobileMenuButton');
+    const mobileMenu = document.querySelector('.mobile-menu');
+    const overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 bg-black/50 z-30 hidden';
+    document.body.appendChild(overlay);
+
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('active');
+      overlay.classList.toggle('hidden');
+    });
+
+    overlay.addEventListener('click', () => {
+      mobileMenu.classList.remove('active');
+      overlay.classList.add('hidden');
+    });
+
+    // Fungsi untuk menampilkan loading
+    function showLoading() {
+      document.getElementById('loadingOverlay').classList.add('active');
+    }
+
+    // Fungsi untuk menyembunyikan loading
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
+    // Load user data
+    function loadUserData() {
+      showLoading();
+      try {
+        // Cek apakah user sudah login
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if (!user) {
+          window.location.href = 'login.html';
+          return;
+        }
+
+        // Update informasi profil
+        document.getElementById('userName').textContent = user.name || 'User';
+        document.getElementById('userEmail').textContent = user.email || 'user@example.com';
+        document.getElementById('userRole').textContent = user.role || 'User';
+        document.getElementById('joinDate').textContent = `Bergabung sejak ${new Date(user.joinDate || Date.now()).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}`;
+
+        // Jika ada foto profil dari Google
+        if (user.photoURL) {
+          document.getElementById('profileImage').src = user.photoURL;
+        }
+
+        // Load preferensi
+        loadPreferences();
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        alert('Terjadi kesalahan saat memuat data profil');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Update profile image
+    async function updateProfileImage(event) {
+      const file = event.target.files[0];
+      if (file) {
+        try {
+          showLoading();
+          // Simulasi upload
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const user = JSON.parse(localStorage.getItem('currentUser')) || {};
+            user.photoURL = e.target.result;
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            document.getElementById('profileImage').src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        } catch (error) {
+          alert('Gagal mengupload foto profil');
+        } finally {
+          hideLoading();
+        }
+      }
+    }
+
+    // Save preferences
+    async function savePreferences() {
+      const preferences = {
+        language: document.getElementById('language').value,
+        theme: document.getElementById('theme').value,
+        dateFormat: document.getElementById('dateFormat').value,
+        timezone: document.getElementById('timezone').value
+      };
+      
+      try {
+        showLoading();
+        // Simulasi save
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        localStorage.setItem('userPreferences', JSON.stringify(preferences));
+        alert('Preferensi berhasil disimpan');
+      } catch (error) {
+        alert('Gagal menyimpan preferensi');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Handle logout
+    function handleLogout() {
+      if (confirm('Apakah Anda yakin ingin keluar?')) {
+        localStorage.removeItem('currentUser');
+        window.location.href = 'login.html';
+      }
+    }
+
+    // Load saved preferences
+    function loadPreferences() {
+      try {
+        const preferences = JSON.parse(localStorage.getItem('userPreferences')) || {};
+        document.getElementById('language').value = preferences.language || 'id';
+        document.getElementById('theme').value = preferences.theme || 'light';
+        document.getElementById('dateFormat').value = preferences.dateFormat || 'DD/MM/YYYY';
+        document.getElementById('timezone').value = preferences.timezone || 'Asia/Jakarta';
+      } catch (error) {
+        console.error('Error loading preferences:', error);
+      }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      loadUserData();
+    });
+  </script>
+</body>
+</html> 
