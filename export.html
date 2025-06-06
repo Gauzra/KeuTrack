@@ -415,6 +415,16 @@
       }
     });
 
+    // Handle logout
+    function handleLogout() {
+      if (confirm('Apakah Anda yakin ingin keluar?')) {
+        // Hapus data user
+        localStorage.removeItem('currentUser');
+        // Redirect ke halaman login
+        window.location.href = 'login.html';
+      }
+    }
+
     // Inisialisasi
     displayExportHistory();
   </script>
