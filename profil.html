@@ -202,10 +202,22 @@
               </label>
               <input type="file" id="imageUpload" accept="image/*" class="hidden" onchange="updateProfileImage(event)">
             </div>
-            <h2 id="userName" class="text-xl font-semibold mt-4">John Doe</h2>
-            <p id="userEmail" class="text-gray-500">john@example.com</p>
-            <p id="userRole" class="text-sm text-gray-500 mt-1">Administrator</p>
-            <p id="joinDate" class="text-sm text-gray-500 mt-1">Bergabung sejak Januari 2024</p>
+            <div class="mt-4 text-center">
+              <div class="flex items-center justify-center space-x-2">
+                <h2 id="userName" class="text-xl font-semibold">John Doe</h2>
+                <button onclick="editName()" class="text-primary hover:text-primary/80">
+                  <span class="material-icons text-sm">edit</span>
+                </button>
+              </div>
+              <p id="userEmail" class="text-gray-500">john@example.com</p>
+              <p id="userRole" class="text-sm text-gray-500 mt-1">Administrator</p>
+              <div class="flex items-center justify-center space-x-2 mt-1">
+                <p id="joinDate" class="text-sm text-gray-500">Bergabung sejak Januari 2024</p>
+                <button onclick="editJoinDate()" class="text-primary hover:text-primary/80">
+                  <span class="material-icons text-sm">edit</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -291,123 +303,94 @@
       document.getElementById('loadingOverlay').classList.remove('active');
     }
 
-    // Fungsi untuk memuat data profil
-    async function loadProfileData() {
-      try {
-        showLoading();
-        
-        // Simulasi delay loading data
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Load data user dari localStorage
-        const userData = JSON.parse(localStorage.getItem('currentUser'));
-        
-        if (userData) {
-          // Update profil image
-          const profileImage = document.getElementById('profileImage');
-          if (userData.picture) {
-            profileImage.src = userData.picture;
-          }
-          
-          // Update nama dan email
-          document.getElementById('userName').textContent = userData.name || 'User';
-          document.getElementById('userEmail').textContent = userData.email || '';
-          
-          // Update tanggal bergabung
-          const joinDate = new Date(userData.createdAt || Date.now());
-          document.getElementById('joinDate').textContent = 
-            `Bergabung sejak ${joinDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}`;
-        }
-        
-        // Load preferensi
-        const preferences = JSON.parse(localStorage.getItem('userPreferences')) || {
-          language: 'id',
-          theme: 'light',
-          dateFormat: 'DD/MM/YYYY',
-          timezone: 'Asia/Jakarta'
-        };
-        
-        document.getElementById('language').value = preferences.language;
-        document.getElementById('theme').value = preferences.theme;
-        document.getElementById('dateFormat').value = preferences.dateFormat;
-        document.getElementById('timezone').value = preferences.timezone;
-        
-      } catch (error) {
-        console.error('Error loading profile data:', error);
-        alert('Gagal memuat data profil');
-      } finally {
-        hideLoading();
+    // Load user data
+    function loadUserData() {
+      const user = JSON.parse(localStorage.getItem('currentUser')) || {};
+      const preferences = JSON.parse(localStorage.getItem('userPreferences')) || {};
+      
+      // Set profile data
+      document.getElementById('userName').textContent = user.name || 'John Doe';
+      document.getElementById('userEmail').textContent = user.email || 'john@example.com';
+      document.getElementById('userRole').textContent = user.role || 'Administrator';
+      document.getElementById('joinDate').textContent = `Bergabung sejak ${user.joinDate || 'Januari 2024'}`;
+      
+      // Set profile image if exists
+      if (user.profileImage) {
+        document.getElementById('profileImage').src = user.profileImage;
       }
+      
+      // Set preferences
+      document.getElementById('language').value = preferences.language || 'id';
+      document.getElementById('theme').value = preferences.theme || 'light';
+      document.getElementById('dateFormat').value = preferences.dateFormat || 'DD/MM/YYYY';
+      document.getElementById('timezone').value = preferences.timezone || 'Asia/Jakarta';
     }
 
-    // Fungsi untuk update foto profil
-    async function updateProfileImage(event) {
-      try {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        showLoading();
-        
-        // Simulasi upload
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Update preview
+    // Update profile image
+    function updateProfileImage(event) {
+      const file = event.target.files[0];
+      if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
+          const user = JSON.parse(localStorage.getItem('currentUser')) || {};
+          user.profileImage = e.target.result;
+          localStorage.setItem('currentUser', JSON.stringify(user));
           document.getElementById('profileImage').src = e.target.result;
         };
         reader.readAsDataURL(file);
-        
-        // Update user data
-        const userData = JSON.parse(localStorage.getItem('currentUser'));
-        userData.picture = URL.createObjectURL(file);
-        localStorage.setItem('currentUser', JSON.stringify(userData));
-        
-      } catch (error) {
-        console.error('Error updating profile image:', error);
-        alert('Gagal mengupdate foto profil');
-      } finally {
-        hideLoading();
       }
     }
 
-    // Fungsi untuk menyimpan preferensi
-    async function savePreferences() {
-      try {
-        showLoading();
-        
-        // Simulasi delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        const preferences = {
-          language: document.getElementById('language').value,
-          theme: document.getElementById('theme').value,
-          dateFormat: document.getElementById('dateFormat').value,
-          timezone: document.getElementById('timezone').value
-        };
-        
-        localStorage.setItem('userPreferences', JSON.stringify(preferences));
-        
-        alert('Preferensi berhasil disimpan');
-        
-      } catch (error) {
-        console.error('Error saving preferences:', error);
-        alert('Gagal menyimpan preferensi');
-      } finally {
-        hideLoading();
+    // Edit name
+    function editName() {
+      const currentName = document.getElementById('userName').textContent;
+      const newName = prompt('Masukkan nama baru:', currentName);
+      if (newName && newName.trim() !== '') {
+        const user = JSON.parse(localStorage.getItem('currentUser')) || {};
+        user.name = newName.trim();
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        document.getElementById('userName').textContent = newName.trim();
       }
+    }
+
+    // Edit join date
+    function editJoinDate() {
+      const currentDate = document.getElementById('joinDate').textContent.replace('Bergabung sejak ', '');
+      const newDate = prompt('Masukkan tanggal bergabung (contoh: Januari 2024):', currentDate);
+      if (newDate && newDate.trim() !== '') {
+        const user = JSON.parse(localStorage.getItem('currentUser')) || {};
+        user.joinDate = newDate.trim();
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        document.getElementById('joinDate').textContent = `Bergabung sejak ${newDate.trim()}`;
+      }
+    }
+
+    // Save preferences
+    function savePreferences() {
+      const preferences = {
+        language: document.getElementById('language').value,
+        theme: document.getElementById('theme').value,
+        dateFormat: document.getElementById('dateFormat').value,
+        timezone: document.getElementById('timezone').value
+      };
+      
+      localStorage.setItem('userPreferences', JSON.stringify(preferences));
+      alert('Preferensi berhasil disimpan!');
     }
 
     // Handle logout
     function handleLogout() {
       if (confirm('Apakah Anda yakin ingin keluar?')) {
-        window.location.replace('login.html');
+        // Hapus data user
+        localStorage.removeItem('currentUser');
+        // Redirect ke halaman login
+        window.location.href = 'login.html';
       }
     }
 
     // Panggil fungsi load data saat halaman dimuat
     document.addEventListener('DOMContentLoaded', () => {
-      loadProfileData();
+      loadUserData();
     });
   </script>
 </body>
