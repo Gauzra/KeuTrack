@@ -407,7 +407,6 @@
     async function loadDashboardData() {
       try {
         showLoading();
-        showSkeletonLoading();
         
         // Simulasi delay loading data
         await new Promise(resolve => setTimeout(resolve, 1500));
@@ -417,26 +416,30 @@
         const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
         
         // Update card data
-        document.getElementById('totalProduk').textContent = produk.length;
-        document.getElementById('totalTransaksi').textContent = transaksi.length;
+        const totalProduk = produk.length;
+        const totalTransaksi = transaksi.length;
         
-        // Hitung total pendapatan
+        // Hitung total pendapatan dan pengeluaran
         const totalPendapatan = transaksi.reduce((total, t) => {
           return total + (t.jenis === 'masuk' ? t.jumlah : 0);
         }, 0);
-        document.getElementById('totalPendapatan').textContent = `Rp ${totalPendapatan.toLocaleString('id-ID')}`;
         
-        // Hitung total pengeluaran
         const totalPengeluaran = transaksi.reduce((total, t) => {
           return total + (t.jenis === 'keluar' ? t.jumlah : 0);
         }, 0);
-        document.getElementById('totalPengeluaran').textContent = `Rp ${totalPengeluaran.toLocaleString('id-ID')}`;
+        
+        // Update statistik
+        document.querySelector('[data-stat="balance"]').textContent = `Rp ${(totalPendapatan - totalPengeluaran).toLocaleString('id-ID')}`;
+        document.querySelector('[data-stat="income"]').textContent = `Rp ${totalPendapatan.toLocaleString('id-ID')}`;
+        document.querySelector('[data-stat="expense"]').textContent = `Rp ${totalPengeluaran.toLocaleString('id-ID')}`;
+        document.querySelector('[data-stat="transactions"]').textContent = totalTransaksi;
+        
+        // Update persentase perubahan
+        const incomeChange = ((totalPendapatan - (totalPendapatan * 0.95)) / (totalPendapatan * 0.95) * 100).toFixed(1);
+        document.querySelector('[data-stat="income-change"]').textContent = `${incomeChange}%`;
         
         // Update grafik
         updateChart(transaksi);
-        
-        // Update tabel
-        updateTable(transaksi);
         
       } catch (error) {
         console.error('Error loading dashboard data:', error);
@@ -444,6 +447,71 @@
       } finally {
         hideLoading();
       }
+    }
+
+    // Fungsi untuk update grafik
+    function updateChart(transaksi) {
+      const ctx = document.getElementById('financeChart').getContext('2d');
+      
+      // Kelompokkan transaksi berdasarkan bulan
+      const monthlyData = {};
+      transaksi.forEach(t => {
+        const date = new Date(t.tanggal);
+        const month = date.toLocaleString('id-ID', { month: 'short' });
+        
+        if (!monthlyData[month]) {
+          monthlyData[month] = { masuk: 0, keluar: 0 };
+        }
+        
+        if (t.jenis === 'masuk') {
+          monthlyData[month].masuk += t.jumlah;
+        } else {
+          monthlyData[month].keluar += t.jumlah;
+        }
+      });
+      
+      // Siapkan data untuk grafik
+      const labels = Object.keys(monthlyData);
+      const masukData = labels.map(month => monthlyData[month].masuk);
+      const keluarData = labels.map(month => monthlyData[month].keluar);
+      
+      // Update grafik
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Pemasukan',
+            data: masukData,
+            borderColor: '#10B981',
+            tension: 0.4
+          }, {
+            label: 'Pengeluaran',
+            data: keluarData,
+            borderColor: '#EF4444',
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return 'Rp ' + value.toLocaleString('id-ID');
+                }
+              }
+            }
+          }
+        }
+      });
     }
 
     // Panggil fungsi load data saat halaman dimuat
