@@ -231,6 +231,16 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
+    // Cek login status
+    function checkLogin() {
+      const user = localStorage.getItem('currentUser');
+      if (!user) {
+        window.location.replace('login.html');
+        return false;
+      }
+      return true;
+    }
+
     // Mobile Menu Toggle
     const mobileMenuButton = document.getElementById('mobileMenuButton');
     const mobileMenu = document.querySelector('.mobile-menu');
@@ -497,38 +507,35 @@
 
     // Fungsi untuk memuat data laporan
     async function loadLaporanData() {
+      if (!checkLogin()) return;
+
       try {
         showLoading();
-        showSkeletonLoading();
         
         // Simulasi delay loading data
         await new Promise(resolve => setTimeout(resolve, 1500));
         
         // Load data dari localStorage
         const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
-        const produk = JSON.parse(localStorage.getItem('produk')) || [];
         
-        // Hitung summary
+        // Update ringkasan
         const totalPendapatan = transaksi.reduce((total, t) => {
-          return total + (t.jenis === 'masuk' ? t.total : 0);
+          return total + (t.jenis === 'masuk' ? t.jumlah : 0);
         }, 0);
         
         const totalPengeluaran = transaksi.reduce((total, t) => {
-          return total + (t.jenis === 'keluar' ? t.total : 0);
+          return total + (t.jenis === 'keluar' ? t.jumlah : 0);
         }, 0);
         
-        const laba = totalPendapatan - totalPengeluaran;
-        
-        // Update summary cards
         document.getElementById('totalPendapatan').textContent = `Rp ${totalPendapatan.toLocaleString('id-ID')}`;
         document.getElementById('totalPengeluaran').textContent = `Rp ${totalPengeluaran.toLocaleString('id-ID')}`;
-        document.getElementById('laba').textContent = `Rp ${laba.toLocaleString('id-ID')}`;
+        document.getElementById('totalLaba').textContent = `Rp ${(totalPendapatan - totalPengeluaran).toLocaleString('id-ID')}`;
         
         // Update grafik
         updateChart(transaksi);
         
         // Update tabel
-        updateTable(produk, transaksi);
+        updateTable(transaksi);
         
       } catch (error) {
         console.error('Error loading laporan data:', error);
@@ -546,28 +553,36 @@
     }
 
     // Fungsi untuk update tabel
-    function updateTable(produk, transaksi) {
+    function updateTable(transaksi) {
       const tbody = document.querySelector('tbody');
-      tbody.innerHTML = produk.map(p => {
-        const penjualan = transaksi.filter(t => t.produk === p.nama && t.jenis === 'masuk')
-          .reduce((total, t) => total + t.jumlah, 0);
-        const pendapatan = transaksi.filter(t => t.produk === p.nama && t.jenis === 'masuk')
-          .reduce((total, t) => total + t.total, 0);
+      tbody.innerHTML = transaksi.map(t => {
+        const penjualan = t.jumlah;
+        const pendapatan = t.total;
         
         return `
           <tr class="hover:bg-gray-50">
-            <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">${p.nama}</td>
+            <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">${t.produk}</td>
             <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">${penjualan}</td>
             <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">Rp ${pendapatan.toLocaleString('id-ID')}</td>
-            <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">${p.stok}</td>
+            <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">${t.stok}</td>
           </tr>
         `;
       }).join('');
     }
 
+    // Handle logout
+    function handleLogout() {
+      if (confirm('Apakah Anda yakin ingin keluar?')) {
+        localStorage.removeItem('currentUser');
+        window.location.replace('login.html');
+      }
+    }
+
     // Panggil fungsi load data saat halaman dimuat
     document.addEventListener('DOMContentLoaded', () => {
-      loadLaporanData();
+      if (checkLogin()) {
+        loadLaporanData();
+      }
     });
   </script>
 </body>
