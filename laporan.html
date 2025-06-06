@@ -4,7 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>KeuTrack - Laporan Keuangan</title>
+  <script>
+    // Cek login status di awal
+    (function checkLogin() {
+      const user = localStorage.getItem('currentUser');
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+    })();
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <script>
@@ -229,18 +240,7 @@
     <div class="loading-spinner"></div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // Cek login status
-    function checkLogin() {
-      const user = localStorage.getItem('currentUser');
-      if (!user) {
-        window.location.replace('login.html');
-        return false;
-      }
-      return true;
-    }
-
     // Mobile Menu Toggle
     const mobileMenuButton = document.getElementById('mobileMenuButton');
     const mobileMenu = document.querySelector('.mobile-menu');
@@ -258,24 +258,6 @@
       overlay.classList.add('hidden');
     });
 
-    // Fungsi untuk format mata uang
-    function formatCurrency(amount) {
-      return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR'
-      }).format(amount);
-    }
-
-    // Fungsi untuk mengambil transaksi dari localStorage
-    function getTransactions() {
-      return JSON.parse(localStorage.getItem('transaksi')) || [];
-    }
-
-    // Fungsi untuk mengambil produk dari localStorage
-    function getProducts() {
-      return JSON.parse(localStorage.getItem('produk')) || [];
-    }
-
     // Fungsi untuk menampilkan loading
     function showLoading() {
       document.getElementById('loadingOverlay').classList.add('active');
@@ -286,229 +268,8 @@
       document.getElementById('loadingOverlay').classList.remove('active');
     }
 
-    // Fungsi untuk menampilkan skeleton loading
-    function showSkeletonLoading() {
-      // Skeleton untuk summary cards
-      const summaryCards = document.querySelectorAll('.summary-card');
-      summaryCards.forEach(card => {
-        card.innerHTML = `
-          <div class="skeleton h-24 rounded-lg"></div>
-        `;
-      });
-
-      // Skeleton untuk grafik
-      const chartContainer = document.getElementById('chartContainer');
-      chartContainer.innerHTML = `
-        <div class="skeleton h-64 rounded-lg"></div>
-      `;
-
-      // Skeleton untuk tabel
-      const tbody = document.querySelector('tbody');
-      tbody.innerHTML = Array(5).fill(`
-        <tr>
-          <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap">
-            <div class="skeleton h-4 w-32"></div>
-          </td>
-          <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap">
-            <div class="skeleton h-4 w-24"></div>
-          </td>
-          <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap">
-            <div class="skeleton h-4 w-24"></div>
-          </td>
-          <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap">
-            <div class="skeleton h-4 w-24"></div>
-          </td>
-        </tr>
-      `).join('');
-    }
-
-    // Fungsi untuk menampilkan laporan
-    function generateReport(startDate, endDate) {
-      const transactions = getTransactions();
-      const products = getProducts();
-
-      // Filter transaksi berdasarkan tanggal
-      const filteredTransactions = transactions.filter(t => {
-        const transactionDate = new Date(t.date);
-        // Normalize dates to compare only the date part
-        const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-        const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-        const trans = new Date(transactionDate.getFullYear(), transactionDate.getMonth(), transactionDate.getDate());
-        
-        return trans >= start && trans <= end;
-      });
-
-      // Hitung Ringkasan Laba Rugi
-      const totalPemasukan = filteredTransactions
-        .filter(t => t.type === 'masuk')
-        .reduce((acc, curr) => acc + curr.total, 0);
-
-      const totalPengeluaran = filteredTransactions
-        .filter(t => t.type === 'keluar')
-        .reduce((acc, curr) => acc + curr.total, 0);
-
-      const labaRugi = totalPemasukan - totalPengeluaran;
-
-      document.getElementById('reportTotalPemasukan').textContent = formatCurrency(totalPemasukan);
-      document.getElementById('reportTotalPengeluaran').textContent = formatCurrency(totalPengeluaran);
-      document.getElementById('reportLabaRugi').textContent = formatCurrency(labaRugi);
-
-      // Generate data untuk Grafik Tren Keuangan (contoh sederhana per hari)
-      const dailyData = {};
-      filteredTransactions.forEach(t => {
-        const date = new Date(t.date).toISOString().split('T')[0];
-        if (!dailyData[date]) {
-          dailyData[date] = { pemasukan: 0, pengeluaran: 0 };
-        }
-        if (t.type === 'masuk') {
-          dailyData[date].pemasukan += t.total;
-        } else {
-          dailyData[date].pengeluaran += t.total;
-        }
-      });
-
-      const sortedDates = Object.keys(dailyData).sort();
-      const chartLabels = sortedDates.map(dateString => new Date(dateString).toLocaleDateString('id-ID'));
-      const chartPemasukanData = sortedDates.map(date => dailyData[date].pemasukan);
-      const chartPengeluaranData = sortedDates.map(date => dailyData[date].pengeluaran);
-
-      // Update atau buat grafik
-      const ctx = document.getElementById('reportFinanceChart').getContext('2d');
-      // Destroy existing chart if it exists
-      if (window.reportFinanceChartInstance) {
-        window.reportFinanceChartInstance.destroy();
-      }
-      window.reportFinanceChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: chartLabels,
-          datasets: [
-            {
-              label: 'Pemasukan',
-              data: chartPemasukanData,
-              borderColor: '#10B981',
-              backgroundColor: '#10B98120',
-              tension: 0.4,
-              fill: true
-            },
-            {
-              label: 'Pengeluaran',
-              data: chartPengeluaranData,
-              borderColor: '#EF4444',
-              backgroundColor: '#EF444420',
-              tension: 0.4,
-              fill: true
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'top',
-              labels: {
-                font: {
-                  family: 'Poppins',
-                  size: 12
-                }
-              }
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                font: {
-                  family: 'Poppins',
-                  size: 10
-                },
-                callback: function(value) {
-                  return formatCurrency(value);
-                }
-              }
-            },
-            x: {
-              ticks: {
-                font: {
-                  family: 'Poppins',
-                  size: 10
-                },
-                maxRotation: 45,
-                minRotation: 45
-              }
-            }
-          }
-        }
-      });
-
-      // Generate Laporan Penjualan Produk
-      const productSales = {};
-      filteredTransactions
-        .filter(t => t.type === 'masuk')
-        .forEach(t => {
-          const product = products.find(p => p.id === t.productId);
-          if (product) {
-            if (!productSales[product.id]) {
-              productSales[product.id] = {
-                name: product.name,
-                quantity: 0,
-                total: 0
-              };
-            }
-            productSales[product.id].quantity += t.quantity;
-            productSales[product.id].total += t.total;
-          }
-        });
-
-      const tableBody = document.getElementById('productSalesTableBody');
-      tableBody.innerHTML = '';
-      const noDataDiv = document.getElementById('noProductSalesData');
-
-      if (Object.keys(productSales).length === 0) {
-        noDataDiv.classList.remove('hidden');
-      } else {
-        noDataDiv.classList.add('hidden');
-        Object.values(productSales).forEach(sale => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td class="px-3 lg:px-6 py-2 lg:py-3 text-sm">${sale.name}</td>
-            <td class="px-3 lg:px-6 py-2 lg:py-3 text-sm">${sale.quantity}</td>
-            <td class="px-3 lg:px-6 py-2 lg:py-3 text-sm">${formatCurrency(sale.total)}</td>
-          `;
-          tableBody.appendChild(row);
-        });
-      }
-    }
-
-    // Event Listeners
-    document.getElementById('applyFilter').addEventListener('click', () => {
-      const startDate = new Date(document.getElementById('startDate').value);
-      const endDate = new Date(document.getElementById('endDate').value);
-      
-      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-        alert('Mohon pilih tanggal mulai dan tanggal akhir');
-        return;
-      }
-      
-      generateReport(startDate, endDate);
-    });
-
-    // Set default date range (current month)
-      const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    
-    document.getElementById('startDate').valueAsDate = firstDay;
-    document.getElementById('endDate').valueAsDate = lastDay;
-    
-    // Generate initial report
-    generateReport(firstDay, lastDay);
-
     // Fungsi untuk memuat data laporan
     async function loadLaporanData() {
-      if (!checkLogin()) return;
-
       try {
         showLoading();
         
@@ -518,7 +279,7 @@
         // Load data dari localStorage
         const transaksi = JSON.parse(localStorage.getItem('transaksi')) || [];
         
-        // Update ringkasan
+        // Hitung total pendapatan dan pengeluaran
         const totalPendapatan = transaksi.reduce((total, t) => {
           return total + (t.jenis === 'masuk' ? t.jumlah : 0);
         }, 0);
@@ -527,6 +288,7 @@
           return total + (t.jenis === 'keluar' ? t.jumlah : 0);
         }, 0);
         
+        // Update ringkasan
         document.getElementById('totalPendapatan').textContent = `Rp ${totalPendapatan.toLocaleString('id-ID')}`;
         document.getElementById('totalPengeluaran').textContent = `Rp ${totalPengeluaran.toLocaleString('id-ID')}`;
         document.getElementById('totalLaba').textContent = `Rp ${(totalPendapatan - totalPengeluaran).toLocaleString('id-ID')}`;
@@ -547,42 +309,102 @@
 
     // Fungsi untuk update grafik
     function updateChart(transaksi) {
-      // Implementasi update grafik
-      const chartContainer = document.getElementById('chartContainer');
-      // ... kode untuk update grafik ...
+      const ctx = document.getElementById('financeChart').getContext('2d');
+      
+      // Kelompokkan transaksi berdasarkan bulan
+      const monthlyData = {};
+      transaksi.forEach(t => {
+        const date = new Date(t.tanggal);
+        const month = date.toLocaleString('id-ID', { month: 'short' });
+        
+        if (!monthlyData[month]) {
+          monthlyData[month] = { masuk: 0, keluar: 0 };
+        }
+        
+        if (t.jenis === 'masuk') {
+          monthlyData[month].masuk += t.jumlah;
+        } else {
+          monthlyData[month].keluar += t.jumlah;
+        }
+      });
+      
+      // Siapkan data untuk grafik
+      const labels = Object.keys(monthlyData);
+      const masukData = labels.map(month => monthlyData[month].masuk);
+      const keluarData = labels.map(month => monthlyData[month].keluar);
+      
+      // Update grafik
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Pemasukan',
+            data: masukData,
+            borderColor: '#10B981',
+            tension: 0.4
+          }, {
+            label: 'Pengeluaran',
+            data: keluarData,
+            borderColor: '#EF4444',
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return 'Rp ' + value.toLocaleString('id-ID');
+                }
+              }
+            }
+          }
+        }
+      });
     }
 
     // Fungsi untuk update tabel
     function updateTable(transaksi) {
-      const tbody = document.querySelector('tbody');
-      tbody.innerHTML = transaksi.map(t => {
-        const penjualan = t.jumlah;
-        const pendapatan = t.total;
-        
-        return `
-          <tr class="hover:bg-gray-50">
-            <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">${t.produk}</td>
-            <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">${penjualan}</td>
-            <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">Rp ${pendapatan.toLocaleString('id-ID')}</td>
-            <td class="px-3 lg:px-6 py-2 lg:py-4 whitespace-nowrap text-sm text-gray-900">${t.stok}</td>
-          </tr>
+      const tbody = document.querySelector('#laporanTable tbody');
+      tbody.innerHTML = '';
+      
+      // Urutkan transaksi berdasarkan tanggal terbaru
+      transaksi.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+      
+      transaksi.forEach(t => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="px-4 py-3 text-sm">${new Date(t.tanggal).toLocaleDateString('id-ID')}</td>
+          <td class="px-4 py-3 text-sm">${t.keterangan}</td>
+          <td class="px-4 py-3 text-sm">${t.jenis === 'masuk' ? 'Pemasukan' : 'Pengeluaran'}</td>
+          <td class="px-4 py-3 text-sm font-medium ${t.jenis === 'masuk' ? 'text-green-600' : 'text-red-600'}">
+            Rp ${t.jumlah.toLocaleString('id-ID')}
+          </td>
         `;
-      }).join('');
+        tbody.appendChild(tr);
+      });
     }
 
     // Handle logout
     function handleLogout() {
       if (confirm('Apakah Anda yakin ingin keluar?')) {
         localStorage.removeItem('currentUser');
-        window.location.replace('login.html');
+        window.location.href = 'login.html';
       }
     }
 
     // Panggil fungsi load data saat halaman dimuat
     document.addEventListener('DOMContentLoaded', () => {
-      if (checkLogin()) {
-        loadLaporanData();
-      }
+      loadLaporanData();
     });
   </script>
 </body>
