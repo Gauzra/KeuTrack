@@ -140,6 +140,12 @@
             <span>Export/Backup</span>
           </a>
         </li>
+        <li>
+          <a href="profil.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">person</span>
+            <span>Profil</span>
+          </a>
+        </li>
       </ul>
     </nav>
     <div class="absolute bottom-0 w-full p-4">
@@ -486,6 +492,13 @@
     // Inisialisasi
     populateProductFilter();
     displayTransactions(getTransactions());
+
+    // Handle logout
+    function handleLogout() {
+      if (confirm('Apakah Anda yakin ingin keluar?')) {
+        window.location.replace('login.html');
+      }
+    }
   </script>
 </body>
 </html> 
