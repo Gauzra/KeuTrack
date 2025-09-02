@@ -1,0 +1,16 @@
+[build]
+  publish = "."
+
+[[redirects]]
+  from = "/"
+  to = "/login.html"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/:splat"
+  status = 200
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild" 

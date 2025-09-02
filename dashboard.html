@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KeuTrack - Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="./Images/LOGO KT.svg">
+  <script src="https://cdn.tailwindcss.com/3.4.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="js/api.js"></script>
+  <script>
+    // Debug: Check if API loaded
+    window.addEventListener('DOMContentLoaded', function() {
+      console.log('🔍 Checking API availability...');
+      console.log('window.KeuTrackAPI:', window.KeuTrackAPI);
+      console.log('typeof window.KeuTrackAPI:', typeof window.KeuTrackAPI);
+      if (window.KeuTrackAPI) {
+        console.log('✅ KeuTrackAPI loaded successfully');
+        console.log('Available methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(window.KeuTrackAPI)));
+      } else {
+        console.error('❌ KeuTrackAPI not loaded!');
+      }
+    });
+  </script>
+  <!-- <link rel="manifest" href="./manifest.json"> -->
+  <meta name="theme-color" content="#2c3e50">
+  <script>
+    // Suppress Tailwind CSS production warning
+    if (typeof window !== 'undefined' && window.console && window.console.warn) {
+      const originalWarn = console.warn;
+      console.warn = function(...args) {
+        if (args[0] && args[0].includes && args[0].includes('should not be used in production')) {
+          return; // Suppress Tailwind production warning
+        }
+        originalWarn.apply(console, args);
+      };
+    }
+    
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Poppins', 'sans-serif'] },
+          colors: { primary: '#2c3e50', success: '#10B981', danger: '#EF4444' }
+        }
+      }
+    }
+  </script>
+  <style>
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      max-width: 350px;
+      padding: 16px 20px;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      transform: translateX(400px);
+      transition: transform 0.3s ease-in-out;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast.success {
+      background-color: #10B981;
+      color: white;
+      border-left: 4px solid #059669;
+    }
+
+    .toast.error {
+      background-color: #EF4444;
+      color: white;
+      border-left: 4px solid #DC2626;
+    }
+
+    .toast.info {
+      background-color: #3B82F6;
+      color: white;
+      border-left: 4px solid #2563EB;
+    }
+
+    .toast.warning {
+      background-color: #F59E0B;
+      color: white;
+      border-left: 4px solid #D97706;
+    }
+
+    .toast-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toast-icon {
+      flex-shrink: 0;
+    }
+
+    .toast-message {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    .toast-close {
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .toast-close:hover {
+      opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+      .mobile-menu {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        width: 80% !important;
+        max-width: 300px;
+      }
+
+      .mobile-menu.active {
+        transform: translateX(0);
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .mobile-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 30;
+      }
+
+      .mobile-overlay.active {
+        display: block;
+      }
+
+      /* Perbaikan untuk kartu statistik di mobile */
+      .stats-grid {
+        grid-template-columns: repeat(1, 1fr);
+      }
+
+      /* Perbaikan ukuran font untuk mobile */
+      .mobile-text-lg {
+        font-size: 1.125rem;
+      }
+
+      .mobile-text-base {
+        font-size: 0.875rem;
+      }
+
+      /* Perbaikan padding untuk konten utama */
+      .main-content {
+        padding: 1rem;
+        margin-top: 4.5rem;
+      }
+
+      /* Perbaikan untuk grafik di mobile */
+      .chart-container {
+        height: 250px;
+      }
+    }
+
+    @media (min-width: 640px) and (max-width: 1023px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 font-sans">
+  <!-- Toast Container -->
+  <div id="toastContainer"></div>
+
+  <!-- Overlay untuk mobile menu -->
+  <div id="mobileOverlay" class="mobile-overlay"></div>
+
+  <!-- Mobile Header -->
+  <div class="lg:hidden fixed top-0 left-0 right-0 bg-primary text-white p-4 z-50">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button id="mobileMenuButton" class="text-white">
+          <span class="material-icons">menu</span>
+        </button>
+        <img src="./Images/LOGO KT.svg" alt="KeuTrack Logo" class="w-10 h-10">
+        <span class="text-xl font-semibold">KeuTrack</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="fixed inset-y-0 left-0 w-64 bg-primary text-white mobile-menu lg:translate-x-0 z-40">
+    <div class="p-6 hidden lg:block">
+      <div class="flex items-center space-x-4">
+        <img src="./Images/LOGO KT.svg" alt="KeuTrack Logo" class="w-[70px] h-[70px]">
+        <span class="text-2xl font-semibold mt-1">KeuTrack</span>
+      </div>
+    </div>
+    <nav class="mt-20 lg:mt-6">
+      <ul class="space-y-2 px-4">
+        <li>
+          <a href="dashboard.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover bg-white/10 transition-colors">
+            <span class="material-icons">analytics</span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="akun.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">account_balance</span>
+            <span>Pengelolaan Akun</span>
+          </a>
+        </li>
+        <li><a href="transaksi.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">swap_horiz</span>
+            <span>Transaksi</span>
+          </a>
+        </li>
+        <li>
+          <a href="siklus_akuntansi.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">account_tree</span>
+            <span>Siklus Akuntansi</span>
+          </a>
+        </li>
+        <li><a href="laporankeuangan.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">summarize</span>
+            <span>Laporan Keuangan</span>
+          </a>
+        </li>
+        <li><a href="profil.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">person</span>
+            <span>Profil</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="absolute bottom-0 w-full p-4">
+      <button id="logoutButton"
+        class="flex items-center space-x-3 w-full px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+        <span class="material-icons">logout</span>
+        <span>Log Out</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-4 lg:p-8 mt-16 lg:mt-0">
+    <!-- Header -->
+    <div class="bg-primary text-white rounded-lg p-6 mb-8">
+      <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start space-y-4 lg:space-y-0">
+        <div>
+          <h1 class="text-xl lg:text-2xl font-semibold">Dashboard</h1>
+          <p class="text-white/80 mt-1 text-sm lg:text-base">Data dari seluruh sistem KeuTrack</p>
+        </div>
+        <div class="flex space-x-3">
+          <button id="refreshButton"
+            class="flex items-center space-x-2 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors text-sm">
+            <span class="material-icons text-sm">refresh</span>
+            <span>Refresh</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stats-grid gap-4 mb-6">
+      <!-- Informasi Kas -->
+      <div class="bg-white rounded-lg shadow-sm p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-xs lg:text-sm font-medium text-gray-500">Kas</h3>
+          <span class="material-icons text-lg lg:text-xl" id="cashIcon">account_balance_wallet</span>
+        </div>
+        <p class="text-xl lg:text-2xl font-semibold text-green-600" data-stat="cash">Rp 0</p>
+        <div class="flex items-center mt-2">
+          <span class="text-green-600 text-xs lg:text-sm font-medium flex items-center">
+            <span class="material-icons text-xs lg:text-sm mr-1">account_balance</span>
+            <span>Kas Aktif</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Laporan Laba/Rugi -->
+      <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6">
+        <div class="flex items-center justify-between mb-3 lg:mb-4">
+          <h3 class="text-xs lg:text-sm font-medium text-gray-500">Laba/Rugi</h3>
+          <span class="material-icons text-primary text-lg lg:text-xl">account_balance</span>
+        </div>
+        <p class="text-xl lg:text-2xl font-semibold text-gray-900" data-stat="profit-loss">Rp 0</p>
+        <div class="flex items-center mt-2">
+          <span class="text-success text-xs lg:text-sm font-medium flex items-center">
+            <span class="material-icons text-xs lg:text-sm mr-1">trending_up</span>
+            <span data-stat="profit-loss-change">0%</span>
+          </span>
+          <span class="text-gray-500 text-xs lg:text-sm ml-2">dari bulan lalu</span>
+        </div>
+      </div>
+
+      <!-- Total Transaksi -->
+      <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6">
+        <div class="flex items-center justify-between mb-3 lg:mb-4">
+          <h3 class="text-xs lg:text-sm font-medium text-gray-500">Total Transaksi</h3>
+          <span class="material-icons text-primary text-lg lg:text-xl">receipt_long</span>
+        </div>
+        <p class="text-xl lg:text-2xl font-semibold text-gray-900" data-stat="total-transactions">0</p>
+        <div class="flex items-center mt-2">
+          <span class="text-success text-xs lg:text-sm font-medium flex items-center">
+            <span class="material-icons text-xs lg:text-sm mr-1">trending_up</span>
+            <span data-stat="transactions-change">0%</span>
+          </span>
+          <span class="text-gray-500 text-xs lg:text-sm ml-2">dari kemarin</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail Information -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
+      <!-- Grafik Tren Keuangan -->
+      <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 lg:mb-6 space-y-2 lg:space-y-0">
+          <h2 class="text-base lg:text-lg font-semibold text-gray-800">Tren Keuangan</h2>
+          <select id="trendPeriod"
+            class="px-3 py-1 rounded-lg border border-gray-300 text-xs lg:text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+            <option value="week">Minggu Ini</option>
+            <option value="month">Bulan Ini</option>
+            <option value="year">Tahun Ini</option>
+          </select>
+        </div>
+        <div class="h-60 lg:h-80">
+          <canvas id="financeChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Detail Laba/Rugi -->
+      <!-- <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6">
+        <h2 class="text-base lg:text-lg font-semibold text-gray-800 mb-4">Detail Laba/Rugi</h2>
+        <div class="space-y-3" id="profitLossDetailsContainer">
+          <div class="text-center py-8 text-gray-500">
+            <span class="material-icons text-4xl mb-2 text-gray-300">analytics</span>
+            <p>Memuat data laba/rugi...</p>
+          </div>
+        </div>
+      </div>
+    </div>  -->
+
+      <!-- Transaksi Terbaru -->
+      <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6">
+        <h2 class="text-base lg:text-lg font-semibold text-gray-800 mb-4">Transaksi Terbaru</h2>
+        <div class="space-y-3" id="recentTransactionsContainer">
+          <div class="text-center py-8 text-gray-500">
+            <span class="material-icons text-4xl mb-2 text-gray-300">receipt_long</span>
+            <p>Memuat data transaksi...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Fungsi untuk menampilkan toast notification
+      function showToast(message, type = 'info') {
+        const toastContainer = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+
+        let icon = 'info';
+        switch (type) {
+          case 'success': icon = 'check_circle'; break;
+          case 'error': icon = 'error'; break;
+          case 'warning': icon = 'warning'; break;
+          case 'info': icon = 'info'; break;
+        }
+
+        toast.innerHTML = `
+        <div class="toast-content">
+          <span class="material-icons toast-icon">${icon}</span>
+          <span class="toast-message">${message}</span>
+          <button class="toast-close" onclick="this.parentElement.parentElement.remove()">
+            <span class="material-icons text-sm">close</span>
+          </button>
+        </div>
+      `;
+
+        toastContainer.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 100);
+        setTimeout(() => {
+          if (toast.parentElement) {
+            toast.classList.remove('show');
+            setTimeout(() => {
+              if (toast.parentElement) {
+                toast.remove();
+              }
+            }, 300);
+          }
+        }, 3000);
+      }
+
+      // Fungsi untuk memformat Rupiah
+      function formatRupiah(angka) {
+        return new Intl.NumberFormat('id-ID', {
+          style: 'currency',
+          currency: 'IDR',
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0
+        }).format(angka || 0);
+      }
+
+      // Fungsi untuk memuat data kas dari API
+      async function loadCashData() {
+        try {
+          // Check if API is available
+          if (!window.KeuTrackAPI) {
+            console.warn('KeuTrackAPI not available');
+            document.querySelector('[data-stat="cash"]').textContent = formatRupiah(0);
+            return 0;
+          }
+
+          const accounts = await window.KeuTrackAPI.getAccounts();
+
+          // 1. Cari akun Kas
+          const cashAccounts = accounts.filter(account =>
+            account.name.toLowerCase().includes('kas') ||
+            account.name.toLowerCase().includes('cash') ||
+            account.category === 'asset' ||
+            account.category === 'Kas'
+          );
+
+          // 2. Hitung total kas dari semua akun kas
+          let totalCash = 0;
+          cashAccounts.forEach(account => {
+            totalCash += parseFloat(account.balance || 0);
+          });
+
+          // 3. Update tampilan dengan warna yang sesuai
+          const cashElement = document.querySelector('[data-stat="cash"]');
+          if (cashElement) {
+            cashElement.textContent = formatRupiah(totalCash);
+            // Ubah warna berdasarkan saldo (hijau untuk positif, merah untuk negatif)
+            cashElement.className = `text-xl lg:text-2xl font-semibold ${totalCash >= 0 ? 'text-success' : 'text-danger'}`;
+          }
+
+          return totalCash;
+
+        } catch (error) {
+          console.error('Error loading cash data:', error);
+          showToast('Gagal memuat data kas', 'error');
+          return 0;
+        }
+      }
+
+      // Baca ringkasan transaksi dari API
+      async function loadTransactionSummary() {
+        try {
+          if (!window.KeuTrackAPI) {
+            console.warn('KeuTrackAPI not available');
+            return { pemasukan: 0, pengeluaran: 0 };
+          }
+
+          const transactions = await window.KeuTrackAPI.getTransactions();
+          const accounts = await window.KeuTrackAPI.getAccounts();
+          
+          let pemasukan = 0;
+          let pengeluaran = 0;
+
+          transactions.forEach(t => {
+            const amount = parseFloat(t.amount || 0);
+            
+            // Cari nama akun dari ID
+            const debitAccount = accounts.find(acc => acc.id === t.debit_account_id);
+            const creditAccount = accounts.find(acc => acc.id === t.credit_account_id);
+            
+            const debitAccountName = (debitAccount?.name || '').toLowerCase();
+            const creditAccountName = (creditAccount?.name || '').toLowerCase();
+            const debitCategory = (debitAccount?.category || '').toLowerCase();
+            const creditCategory = (creditAccount?.category || '').toLowerCase();
+
+            // Logika berdasarkan nama akun dan kategori
+            const isExpense = debitAccountName.includes('beban') || 
+                             debitAccountName.includes('expense') ||
+                             debitCategory.includes('beban') ||
+                             debitCategory.includes('expense');
+                             
+            const isIncome = creditAccountName.includes('pendapatan') || 
+                            creditAccountName.includes('income') || 
+                            creditAccountName.includes('revenue') ||
+                            creditCategory.includes('pendapatan') ||
+                            creditCategory.includes('income');
+
+            if (isExpense) {
+              pengeluaran += amount;
+            }
+            if (isIncome) {
+              pemasukan += amount;
+            }
+          });
+
+          return { pemasukan, pengeluaran };
+        } catch (e) {
+          console.error('Error loadTransactionSummary:', e);
+          return { pemasukan: 0, pengeluaran: 0 };
+        }
+      }
+
+      // Fungsi untuk memuat data laba/rugi dari API  
+      async function loadProfitLossData() {
+        try {
+          if (!window.KeuTrackAPI) {
+            console.warn('KeuTrackAPI not available');
+            return { totalIncome: 0, totalExpense: 0, profitLoss: 0 };
+          }
+
+          // Get transactions from API instead of pre-calculated reports  
+          const transactions = await window.KeuTrackAPI.getTransactions();
+          const { pemasukan: totalIncome, pengeluaran: totalExpense } = await loadTransactionSummary();
+
+          // Calculate profit/loss
+          const profitLoss = totalIncome - totalExpense;
+
+          // Update UI elements
+          const profitLossElement = document.querySelector('[data-stat="profit-loss"]');
+          const profitLossChangeElement = document.querySelector('[data-stat="profit-loss-change"]');
+
+          if (profitLossElement) {
+            profitLossElement.textContent = formatRupiah(profitLoss);
+            profitLossElement.className = `text-xl lg:text-2xl font-semibold ${profitLoss >= 0 ? 'text-success' : 'text-danger'}`;
+          }
+
+          return { totalIncome, totalExpense, profitLoss };
+
+        } catch (error) {
+          console.error('Error loading profit/loss data:', error);
+          showToast('Gagal memuat data laporan keuangan', 'error');
+          return { totalIncome: 0, totalExpense: 0, profitLoss: 0 };
+        }
+      }
+
+      // [TAMBAHKAN] Fungsi untuk update detail laba/rugi (sesuai format laporan)
+      function updateProfitLossDetails(income, expense, profitLoss) {
+        const container = document.getElementById('profitLossDetailsContainer');
+        if (!container) return;
+
+        const html = `
+    <div class="space-y-3">
+      <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+        <div class="flex items-center space-x-2">
+          <span class="material-icons text-green-600 text-sm">trending_up</span>
+          <span class="text-sm font-medium text-gray-800">Total Pendapatan</span>
+        </div>
+        <span class="text-sm font-semibold text-green-600">${formatRupiah(income)}</span>
+      </div>
+      <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+        <div class="flex items-center space-x-2">
+          <span class="material-icons text-red-600 text-sm">trending_down</span>
+          <span class="text-sm font-medium text-gray-800">Total Beban</span>
+        </div>
+        <span class="text-sm font-semibold text-red-600">${formatRupiah(expense)}</span>
+      </div>
+      <div class="flex justify-between items-center p-3 ${profitLoss >= 0 ? 'bg-green-50' : 'bg-red-50'} rounded-lg">
+        <div class="flex items-center space-x-2">
+          <span class="material-icons ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'} text-sm">${profitLoss >= 0 ? 'trending_up' : 'trending_down'}</span>
+          <span class="text-sm font-medium text-gray-800">Laba/Rugi Bersih</span>
+        </div>
+        <span class="text-sm font-semibold ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}">
+          ${formatRupiah(Math.abs(profitLoss))} 
+          ${profitLoss < 0 ? '(Rugi)' : '(Laba)'}
+        </span>
+      </div>
+    </div>
+  `;
+
+        container.innerHTML = html;
+      }
+
+        async function loadTransactionData() {
+          try {
+            if (!window.KeuTrackAPI) {
+              console.warn('KeuTrackAPI not available');
+              return { totalTransactions: 0, todayTransactions: 0 };
+            }
+
+            const transactions = await window.KeuTrackAPI.getTransactions();
+
+            // Hitung total transaksi
+            const totalTransactions = transactions.length;
+
+            // Hitung transaksi hari ini
+            const today = new Date().toDateString();
+            const todayTransactions = transactions.filter(t => {
+              if (!t.transaction_date) return false;
+              const transactionDate = new Date(t.transaction_date).toDateString();
+              return transactionDate === today;
+            });
+
+            // Hitung transaksi kemarin
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayTransactions = transactions.filter(t => {
+              if (!t.transaction_date) return false;
+              const transactionDate = new Date(t.transaction_date).toDateString();
+              return transactionDate === yesterday.toDateString();
+            });
+
+            // Update tampilan total transaksi
+            const totalTransactionsElement = document.querySelector('[data-stat="total-transactions"]');
+            if (totalTransactionsElement) {
+              totalTransactionsElement.textContent = totalTransactions;
+            }
+
+            // Update persentase perubahan
+            const transactionsChangeElement = document.querySelector('[data-stat="transactions-change"]');
+            if (transactionsChangeElement) {
+              const change = ((todayTransactions.length - yesterdayTransactions.length) / (yesterdayTransactions.length || 1)) * 100;
+              transactionsChangeElement.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`;
+            }
+
+            // Update transaksi terbaru
+            await updateRecentTransactions(transactions);
+
+            return { totalTransactions, todayTransactions: todayTransactions.length };
+          } catch (error) {
+            console.error('Error loading transaction data:', error);
+            showToast('Gagal memuat data transaksi', 'error');
+            return { totalTransactions: 0, todayTransactions: 0 };
+          }
+        }
+
+        // [TAMBAHKAN] Fungsi untuk menentukan jenis transaksi berdasarkan akun
+        async function getTransactionType(transaction) {
+          try {
+            const accounts = await window.KeuTrackAPI.getAccounts();
+            
+            // Cari akun debit dan kredit
+            const debitAccount = accounts.find(acc => acc.id === transaction.debit_account_id);
+            const creditAccount = accounts.find(acc => acc.id === transaction.credit_account_id);
+            
+            const debitAccountName = (debitAccount?.name || '').toLowerCase();
+            const creditAccountName = (creditAccount?.name || '').toLowerCase();
+            const debitCategory = (debitAccount?.category || '').toLowerCase();
+            const creditCategory = (creditAccount?.category || '').toLowerCase();
+
+            // Logic: Jika kredit adalah akun pendapatan → PEMASUKAN
+            if (creditAccountName.includes('pendapatan') || 
+                creditAccountName.includes('income') || 
+                creditAccountName.includes('revenue') ||
+                creditCategory.includes('pendapatan') ||
+                creditCategory.includes('income')) {
+              return 'pemasukan';
+            }
+
+            // Logic: Jika debit adalah akun beban → PENGELUARAN  
+            if (debitAccountName.includes('beban') || 
+                debitAccountName.includes('expense') ||
+                debitCategory.includes('beban') ||
+                debitCategory.includes('expense')) {
+              return 'pengeluaran';
+            }
+
+            return 'transaksi'; // Default untuk transfer antar akun
+          } catch (error) {
+            console.error('Error getting transaction type:', error);
+            return 'transaksi';
+          }
+        }
+
+        // Fungsi untuk update transaksi terbaru
+        async function updateRecentTransactions(transactions) {
+          const container = document.getElementById('recentTransactionsContainer');
+          if (!container) return;
+
+          if (!transactions || transactions.length === 0) {
+            container.innerHTML = `
+              <div class="text-center py-8">
+                <span class="material-icons text-2xl mb-2 text-gray-300">receipt_long</span>
+                <p class="text-sm">Belum ada transaksi</p>
+              </div>
+            `;
+            return;
+          }
+
+          const recentTransactions = transactions
+            .filter(t => t && t.transaction_date && t.amount != null)
+            .sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date))
+            .slice(0, 5);
+
+          let html = '';
+
+          for (const transaction of recentTransactions) {
+            const amount = parseFloat(transaction.amount || 0);
+            if (amount <= 0) continue;
+
+            // DETEKSI OTOMATIS BERDASARKAN AKUN
+            const transactionType = await getTransactionType(transaction);
+
+            let typeColor, typeIcon, typeText;
+
+            if (transactionType === 'pemasukan') {
+              typeColor = 'text-success';
+              typeIcon = 'trending_up';
+              typeText = 'Pemasukan';
+            } else if (transactionType === 'pengeluaran') {
+              typeColor = 'text-danger';
+              typeIcon = 'trending_down';
+              typeText = 'Pengeluaran';
+            } else {
+              typeColor = 'text-blue-600';
+              typeIcon = 'swap_horiz';
+              typeText = 'Transfer';
+            }
+
+            const description = transaction.description || `${typeText} - ${formatRupiah(amount)}`;
+
+            html += `
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-2">
+        <div class="flex items-center space-x-2">
+          <span class="material-icons ${typeColor} text-sm">${typeIcon}</span>
+          <div>
+            <p class="text-xs font-medium text-gray-800">${description}</p>
+            <p class="text-xs text-gray-500">${new Date(transaction.transaction_date).toLocaleDateString('id-ID')}</p>
+          </div>
+        </div>
+        <span class="text-sm font-semibold ${typeColor}">${formatRupiah(amount)}</span>
+      </div>
+    `;
+          }
+
+          container.innerHTML = html || `
+    <div class="text-center py-4 text-gray-500">
+      <span class="material-icons text-2xl mb-2 text-gray-300">receipt_long</span>
+      <p class="text-sm">Belum ada transaksi</p>
+    </div>
+  `;
+        }
+        // Fungsi untuk update grafik keuangan
+        async function updateFinanceChart(transactions) {
+          const ctx = document.getElementById('financeChart');
+          if (!ctx) return;
+
+          const period = document.getElementById('trendPeriod').value;
+
+          // Hitung tanggal awal
+          const now = new Date();
+          let startDate;
+          switch (period) {
+            case 'week':
+              startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+              break;
+            case 'month':
+              startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+              break;
+            case 'year':
+              startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+              break;
+          }
+
+          // Kelompokkan data
+          const groupedData = {};
+          try {
+            if (!window.KeuTrackAPI) {
+              console.warn('KeuTrackAPI not available for chart');
+              return;
+            }
+            
+            const accounts = await window.KeuTrackAPI.getAccounts();
+            
+            for (const t of transactions.filter(t => new Date(t.transaction_date) >= startDate)) {
+              const date = t.transaction_date.split('T')[0];
+              if (!groupedData[date]) {
+                groupedData[date] = { income: 0, expense: 0 };
+              }
+              const amount = parseFloat(t.amount || 0);
+
+              if (amount > 0) {
+                // Cari akun debit dan kredit
+                const debitAccount = accounts.find(acc => acc.id === t.debit_account_id);
+                const creditAccount = accounts.find(acc => acc.id === t.credit_account_id);
+                
+                const debitAccountName = (debitAccount?.name || '').toLowerCase();
+                const creditAccountName = (creditAccount?.name || '').toLowerCase();
+                const debitCategory = (debitAccount?.category || '').toLowerCase();
+                const creditCategory = (creditAccount?.category || '').toLowerCase();
+
+                // Deteksi jenis transaksi
+                const isIncome = creditAccountName.includes('pendapatan') || 
+                                creditAccountName.includes('income') || 
+                                creditAccountName.includes('revenue') ||
+                                creditCategory.includes('pendapatan') ||
+                                creditCategory.includes('income');
+                                
+                const isExpense = debitAccountName.includes('beban') || 
+                                 debitAccountName.includes('expense') ||
+                                 debitCategory.includes('beban') ||
+                                 debitCategory.includes('expense');
+
+                if (isIncome) {
+                  groupedData[date].income += amount;
+                } else if (isExpense) {
+                  groupedData[date].expense += amount;
+                }
+                // Transfer tidak dimasukkan ke income/expense
+              }
+            }
+          } catch (error) {
+            console.error('Error loading chart data:', error);
+            showToast('Gagal memuat data grafik', 'error');
+          }
+
+          const labels = Object.keys(groupedData).sort();
+          const incomeData = labels.map(date => groupedData[date].income);
+          const expenseData = labels.map(date => groupedData[date].expense);
+
+          // Update grafik
+          if (window.financeChart && typeof window.financeChart.destroy === 'function') {
+            window.financeChart.destroy();
+          }
+
+          window.financeChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels.map(date => new Date(date).toLocaleDateString('id-ID', { month: 'short', day: 'numeric' })),
+              datasets: [
+                {
+                  label: 'Pemasukan',
+                  data: incomeData,
+                  borderColor: '#10B981',
+                  backgroundColor: '#10B98120',
+                  tension: 0.4,
+                  fill: true
+                },
+                {
+                  label: 'Pengeluaran',
+                  data: expenseData,
+                  borderColor: '#EF4444',
+                  backgroundColor: '#EF444420',
+                  tension: 0.4,
+                  fill: true
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'top'
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    callback: function (value) {
+                      return formatRupiah(value);
+                    }
+                  }
+                }
+              }
+            }
+          });
+        }
+
+        // Fungsi untuk update detail laba/rugi
+        function updateProfitLossDetails(income, expense, profitLoss) {
+          const container = document.getElementById('profitLossDetailsContainer');
+          if (!container) return;
+
+          const html = `
+        <div class="space-y-3">
+          <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+            <div class="flex items-center space-x-2">
+              <span class="material-icons text-green-600 text-sm">trending_up</span>
+              <span class="text-sm font-medium text-gray-800">Total Pemasukan</span>
+            </div>
+            <span class="text-sm font-semibold text-green-600">${formatRupiah(income)}</span>
+          </div>
+          <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+            <div class="flex items-center space-x-2">
+              <span class="material-icons text-red-600 text-sm">trending_down</span>
+              <span class="text-sm font-medium text-gray-800">Total Pengeluaran</span>
+            </div>
+            <span class="text-sm font-semibold text-red-600">${formatRupiah(expense)}</span>
+          </div>
+          <div class="flex justify-between items-center p-3 ${profitLoss >= 0 ? 'bg-green-50' : 'bg-red-50'} rounded-lg">
+            <div class="flex items-center space-x-2">
+              <span class="material-icons ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'} text-sm">${profitLoss >= 0 ? 'trending_up' : 'trending_down'}</span>
+              <span class="text-sm font-medium text-gray-800">Laba/Rugi</span>
+            </div>
+            <span class="text-sm font-semibold ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}">${formatRupiah(profitLoss)}</span>
+          </div>
+        </div>
+      `;
+
+          container.innerHTML = html;
+        }
+
+
+        // Fungsi untuk memuat semua data dashboard
+        async function loadDashboardData() {
+          try {
+            // Check if API is available dengan retry mechanism
+            if (!window.KeuTrackAPI) {
+              console.warn('⚠️ KeuTrackAPI not available - attempting to reload api.js');
+              
+              // Try to reload api.js
+              const script = document.createElement('script');
+              script.src = 'js/api.js';
+              document.head.appendChild(script);
+              
+              // Wait for script to load
+              await new Promise((resolve, reject) => {
+                script.onload = resolve;
+                script.onerror = reject;
+              });
+              
+              // Check again
+              if (!window.KeuTrackAPI) {
+                showToast('❌ API client tidak dapat dimuat. Periksa file js/api.js', 'error');
+                return;
+              }
+            }
+
+            // Test API connection dengan retry
+            let retryCount = 0;
+            const maxRetries = 3;
+            
+            while (retryCount < maxRetries) {
+              try {
+                // Check if apiCall method exists
+                if (typeof window.KeuTrackAPI.apiCall !== 'function') {
+                  throw new Error('KeuTrackAPI.apiCall is not a function');
+                }
+                
+                await window.KeuTrackAPI.apiCall('/health');
+                console.log('✅ API connection successful');
+                break;
+              } catch (error) {
+                retryCount++;
+                console.warn(`API connection attempt ${retryCount}/${maxRetries} failed:`, error.message);
+                
+                if (retryCount >= maxRetries) {
+                  console.error('❌ All API connection attempts failed');
+                  showToast('Backend tidak tersedia. Pastikan server berjalan di http://localhost:3001', 'error');
+                  return;
+                }
+                
+                // Wait 1 second before retry
+                await new Promise(resolve => setTimeout(resolve, 1000));
+              }
+            }
+
+            // Tampilkan loading state
+            showToast('Memuat data dashboard...', 'info');
+
+            // Muat data dari semua sumber
+            const cashBalance = await loadCashData();
+            const { totalIncome, totalExpense, profitLoss } = await loadProfitLossData();
+            const { totalTransactions, todayTransactions } = await loadTransactionData();
+
+            // Update grafik keuangan
+            const transactions = await window.KeuTrackAPI.getTransactions();
+            await updateFinanceChart(transactions);
+
+            console.log('✅ Dashboard data loaded successfully:', {
+              cashBalance,
+              totalIncome,
+              totalExpense,
+              profitLoss,
+              totalTransactions,
+              todayTransactions
+            });
+
+            showToast('✅ Data dashboard berhasil dimuat!', 'success');
+          } catch (error) {
+            console.error('❌ Error loading dashboard data:', error);
+            showToast('❌ Gagal memuat data dashboard: ' + error.message, 'error');
+          }
+        }
+
+        // Fungsi untuk mendeteksi perubahan data
+        function setupDataChangeListener() {
+          let lastAccountsData = null;
+          let lastTransactionsData = null;
+
+          // Fungsi untuk mengecek perubahan
+          async function checkForChanges() {
+            try {
+              if (!window.KeuTrackAPI) {
+                return; // Skip jika API tidak tersedia
+              }
+
+              const currentAccountsData = await window.KeuTrackAPI.getAccounts();
+              const currentTransactionsData = await window.KeuTrackAPI.getTransactions();
+
+              // Jika ada perubahan pada akun
+              if (JSON.stringify(currentAccountsData) !== JSON.stringify(lastAccountsData)) {
+                console.log('Data akun berubah, memperbarui dashboard...');
+                lastAccountsData = currentAccountsData;
+                await loadDashboardData();
+              }
+
+              // Jika ada perubahan pada transaksi
+              if (JSON.stringify(currentTransactionsData) !== JSON.stringify(lastTransactionsData)) {
+                console.log('Data transaksi berubah, memperbarui dashboard...');
+                lastTransactionsData = currentTransactionsData;
+                await loadDashboardData();
+              }
+            } catch (error) {
+              console.error('Error checking for changes:', error);
+            }
+          }
+
+          // Cek perubahan setiap 5 detik
+          setInterval(checkForChanges, 5000);
+
+          // Cek perubahan saat window mendapat fokus
+          window.addEventListener('focus', checkForChanges);
+
+          // Cek perubahan saat visibility change
+          document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+              checkForChanges();
+            }
+          });
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', async function () {
+          console.log('🚀 Dashboard loading...');
+          console.log('🌐 Expected API URL: http://localhost:3001/api');
+          console.log('🖥️ Frontend URL: http://localhost:2000');
+          
+          // Wait a bit for API to load
+          setTimeout(async () => {
+            // Muat data awal
+            await loadDashboardData();
+
+            // Setup real-time update
+            setupDataChangeListener();
+          }, 500);
+
+          // Event listener untuk tombol Refresh
+          const refreshButton = document.getElementById('refreshButton');
+          if (refreshButton) {
+            refreshButton.addEventListener('click', async () => {
+              await loadDashboardData();
+            });
+          }
+
+          // Event listener untuk perubahan periode grafik
+          const trendPeriodSelect = document.getElementById('trendPeriod');
+          if (trendPeriodSelect) {
+            trendPeriodSelect.addEventListener('change', async () => {
+              const transactions = await window.KeuTrackAPI.getTransactions();
+              await updateFinanceChart(transactions);
+            });
+          }
+
+          // Tombol Logout
+          const logoutButton = document.getElementById('logoutButton');
+          if (logoutButton) {
+            logoutButton.addEventListener('click', () => {
+              if (confirm('Apakah Anda yakin ingin keluar?')) {
+                localStorage.removeItem('currentUser');
+                window.location.href = 'login.html';
+              }
+            });
+          }
+
+          // Mobile menu
+
+          const mobileMenuButton = document.getElementById('mobileMenuButton');
+          const mobileMenu = document.querySelector('.mobile-menu');
+          const mobileOverlay = document.getElementById('mobileOverlay');
+
+          function toggleMobileMenu() {
+            mobileMenu.classList.toggle("active");
+            mobileOverlay.classList.toggle("active");
+            document.body.style.overflow = mobileMenu.classList.contains("active") ? "hidden" : "";
+          }
+
+          function closeMobileMenu() {
+            mobileMenu.classList.remove("active");
+            mobileOverlay.classList.remove("active");
+            document.body.style.overflow = "";
+          }
+
+          if (mobileMenuButton && mobileMenu && mobileOverlay) {
+            mobileMenuButton.addEventListener("click", toggleMobileMenu);
+            mobileOverlay.addEventListener("click", closeMobileMenu);
+
+
+            // Close menu ketika link di klik
+            document.querySelectorAll('.mobile-menu a').forEach(link => {
+              link.addEventListener('click', closeMobileMenu);
+            });
+          }
+
+          // Muat data ulang saat halaman menjadi aktif
+          document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+              console.log('Page became visible, reloading data...');
+              loadDashboardData();
+            }
+          });
+
+          // Muat data ulang saat window mendapat fokus
+          window.addEventListener('focus', () => {
+            console.log('Window focused, reloading data...');
+            loadDashboardData();
+          });
+        });
+    </script>
+</body>
+
+</html>

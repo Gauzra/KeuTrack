@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>KeuTrack - Pengelolaan Akun</title>
+  <link rel="icon" type="image/svg+xml" href="./Images/LOGO KT.svg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="js/api.js"></script>
+  <script>
+    // Debug: Check if API loaded
+    window.addEventListener('DOMContentLoaded', function () {
+      console.log('🔍 [AKUN PAGE] Checking API availability...');
+      console.log('window.KeuTrackAPI:', window.KeuTrackAPI);
+      if (window.KeuTrackAPI) {
+        console.log('✅ [AKUN PAGE] KeuTrackAPI loaded successfully');
+      } else {
+        console.error('❌ [AKUN PAGE] KeuTrackAPI not loaded!');
+      }
+    });
+  </script>
+  <script>
+    // Suppress Tailwind CSS production warning
+    if (typeof window !== 'undefined' && window.console && window.console.warn) {
+      const originalWarn = console.warn;
+      console.warn = function(...args) {
+        if (args[0] && args[0].includes && args[0].includes('should not be used in production')) {
+          return; // Suppress Tailwind production warning
+        }
+        originalWarn.apply(console, args);
+      };
+    }
+    
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Poppins', 'sans-serif'] },
+          colors: { primary: '#2c3e50', success: '#10B981', danger: '#EF4444' }
+        }
+      }
+    }
+  </script>
+  <style>
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      max-width: 350px;
+      padding: 16px 20px;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      transform: translateX(400px);
+      transition: transform 0.3s ease-in-out;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast.success {
+      background-color: #10B981;
+      color: white;
+      border-left: 4px solid #059669;
+    }
+
+    .toast.error {
+      background-color: #EF4444;
+      color: white;
+      border-left: 4px solid #DC2626;
+    }
+
+    .toast.info {
+      background-color: #3B82F6;
+      color: white;
+      border-left: 4px solid #2563EB;
+    }
+
+    .toast.warning {
+      background-color: #F59E0B;
+      color: white;
+      border-left: 4px solid #D97706;
+    }
+
+    .toast-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toast-icon {
+      flex-shrink: 0;
+    }
+
+    .toast-message {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    .toast-close {
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .toast-close:hover {
+      opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+      .mobile-menu {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        width: 80% !important;
+        max-width: 300px;
+      }
+
+      .mobile-menu.active {
+        transform: translateX(0);
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .mobile-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 30;
+      }
+
+      .mobile-overlay.active {
+        display: block;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 font-sans">
+  <!-- Toast Container -->
+  <div id="toastContainer"></div>
+
+  <!-- Mobile overlay for closing sidebar -->
+  <div id="mobileOverlay" class="mobile-overlay"></div>
+
+  <!-- Mobile Header -->
+  <div class="lg:hidden fixed top-0 left-0 right-0 bg-primary text-white p-4 z-50">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button id="mobileMenuButton" class="text-white">
+          <span class="material-icons">menu</span>
+        </button>
+        <img src="./Images/LOGO KT.svg" alt="KeuTrack Logo" class="w-10 h-10">
+        <span class="text-xl font-semibold">KeuTrack</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="fixed inset-y-0 left-0 w-64 bg-primary text-white mobile-menu lg:translate-x-0 z-40">
+    <div class="p-6 hidden lg:block">
+      <div class="flex items-center space-x-4">
+        <img src="./Images/LOGO KT.svg" alt="KeuTrack Logo" class="w-[70px] h-[70px]">
+        <span class="text-2xl font-semibold">KeuTrack</span>
+      </div>
+    </div>
+    <nav class="mt-20 lg:mt-6">
+      <ul class="space-y-2 px-4">
+        <li>
+          <a href="dashboard.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">analytics</span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="akun.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">account_balance</span>
+            <span>Pengelolaan Akun</span>
+          </a>
+        </li>
+        <li>
+          <a href="transaksi.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">swap_horiz</span>
+            <span>Transaksi</span>
+          </a>
+        </li>
+        <li>
+          <a href="siklus_akuntansi.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">account_tree</span>
+            <span>Siklus Akuntansi</span>
+          </a>
+        </li>
+        <li>
+          <a href="laporankeuangan.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">summarize</span>
+            <span>Laporan Keuangan</span>
+          </a>
+        </li>
+        <li>
+          <a href="profil.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">person</span>
+            <span>Profil</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="absolute bottom-0 w-full p-4">
+      <button id="logoutButton"
+        class="flex items-center space-x-3 w-full px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+        <span class="material-icons">logout</span>
+        <span>Log Out</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-4 lg:p-8 mt-16 lg:mt-0">
+    <!-- Header -->
+    <div class="bg-primary text-white rounded-lg p-6 mb-8">
+      <div>
+        <h1 class="text-2xl font-semibold">Pengelolaan Akun</h1>
+        <p class="text-white/80 mt-1">Kelola dan atur akun keuangan</p>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="bg-white rounded-lg shadow-sm p-6">
+      <!-- Table Header with Add Button -->
+      <div class="flex flex-col mb-6 gap-4">
+        <h2 class="text-lg font-semibold text-gray-800">Daftar Akun</h2>
+
+        <!-- Container dua tombol: + Akun (kiri) dan Hapus Semua (kanan) -->
+        <div class="flex flex-col md:flex-row md:justify-between items-stretch md:items-center gap-3 w-full">
+          <!-- Dropdown Button +Akun -->
+          <div class="relative">
+            <button id="addAccountBtn"
+              class="flex items-center justify-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors w-full md:w-auto">
+              <span class="material-icons">add</span>
+              <span>Akun</span>
+              <span class="material-icons text-sm">expand_more</span>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div id="accountDropdown"
+              class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 hidden z-50">
+              <div class="p-2">
+                <div class="px-3 py-2 text-sm font-medium text-gray-700 border-b border-gray-200 mb-2">
+                  Pilih Jenis Akun
+                </div>
+
+                <!-- Manual Account -->
+                <button onclick="openManualAccountModal()"
+                  class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                  <span class="material-icons text-sm mr-2">edit</span>
+                  Tambah Akun Manual
+                </button>
+
+                <!-- Default Accounts -->
+                <div class="px-3 py-2 text-sm font-medium text-gray-700 border-b border-gray-200 mt-3 mb-2">
+                  Pilih dari Daftar Default
+                </div>
+
+                <div class="max-h-60 overflow-y-auto space-y-1">
+                  <button onclick="selectDefaultAccount('KAS')"
+                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                    KAS
+                  </button>
+                  <button onclick="selectDefaultAccount('PIUTANG USAHA')"
+                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                    PIUTANG USAHA
+                  </button>
+                  <button onclick="selectDefaultAccount('PIUTANG SEWA')"
+                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                    PIUTANG SEWA
+                  </button>
+                  <button onclick="selectDefaultAccount('PERLENGKAPAN')"
+                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                    PERLENGKAPAN
+                  </button>
+                  <button onclick="selectDefaultAccount('PERALATAN')"
+                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                    PERALATAN
+                  </button>
+                  <button onclick="selectDefaultAccount('KENDARAAN')"
+                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                    KENDARAAN
+                  </button>
+                  <button onclick="selectDefaultAccount('TANAH')"
+                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                    TANAH
+                  </button>
+                  <button onclick="selectDefaultAccount('HUTANG BANK')"
+                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                    HUTANG BANK
+                  </button>
+                  <button onclick="selectDefaultAccount('MODAL')"
+                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                    MODAL
+                  </button>
+                  <button onclick="selectDefaultAccount('PRIVE')"
+                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                    PRIVE
+                  </button>
+                  <button onclick="selectDefaultAccount('PENDAPATAN')"
+                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                    PENDAPATAN
+                  </button>
+                  <button onclick="selectDefaultAccount('BEBAN GAJI')"
+                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                    BEBAN GAJI
+                  </button>
+                  <button onclick="selectDefaultAccount('BEBAN IKLAN')"
+                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                    BEBAN IKLAN
+                  </button>
+                  <button onclick="selectDefaultAccount('BEBAN AIR, LISTRIK DAN TELPON')"
+                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                    BEBAN AIR, LISTRIK DAN TELPON
+                  </button>
+                  <button onclick="selectDefaultAccount('BEBAN LAIN-LAIN')"
+                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                    BEBAN LAIN-LAIN
+                  </button>
+                  <button onclick="selectDefaultAccount('BEBAN PERLENGKAPAN')"
+                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                    BEBAN PERLENGKAPAN
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tombol Hapus Semua Akun -->
+          <button id="deleteAllAccountsBtn"
+            class="flex items-center justify-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors w-full md:w-auto">
+            <span class="material-icons">delete_sweep</span>
+            <span>Hapus Semua</span>
+          </button>
+        </div>
+
+        <!-- Accounts Table -->
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kode Akun</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Akun</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Saldo Awal</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kode Ref</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="accountsTableBody" class="divide-y divide-gray-200">
+              <!-- Akun akan ditampilkan di sini -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Tambah Akun Manual -->
+    <div id="manualAccountModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center">
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Tambah Akun Manual</h3>
+            <button onclick="closeManualAccountModal()" class="text-gray-400 hover:text-gray-600">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+
+          <form id="manualAccountForm" class="space-y-4">
+            <div>
+              <label for="manualAccountName" class="block text-sm font-medium text-gray-700 mb-1">Nama Akun *</label>
+              <input type="text" id="manualAccountName" required placeholder="Masukkan nama akun baru"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+            </div>
+
+            <!-- Input nominal khusus untuk akun KAS dan MODAL -->
+            <div id="kasBalanceInput" class="hidden">
+              <label for="manualAccountBalance" class="block text-sm font-medium text-gray-700 mb-1">Saldo Awal (Rp)
+                *</label>
+              <input type="text" id="manualAccountBalance" inputmode="numeric" placeholder="0"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-right">
+            </div>
+
+            <div class="flex space-x-3 pt-4">
+              <button type="button" onclick="closeManualAccountModal()"
+                class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Batal</button>
+              <button type="submit"
+                class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">Simpan</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Saldo Awal untuk Akun Default -->
+    <div id="defaultAccountModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center">
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Tambah Akun Default</h3>
+            <button onclick="closeDefaultAccountModal()" class="text-gray-400 hover:text-gray-600">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+
+          <form id="defaultAccountForm" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Nama Akun</label>
+              <div class="px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                <span id="selectedDefaultAccountName" class="text-gray-900 font-medium"></span>
+              </div>
+            </div>
+
+            <!-- Input nominal khusus untuk akun KAS dan MODAL -->
+
+            <div id="defaultKasBalanceInput" class="hidden">
+              <label for="defaultAccountBalance" class="block text-sm font-medium text-gray-700 mb-1">Saldo Awal (Rp)
+                *</label>
+              <input type="text" id="defaultAccountBalance" inputmode="numeric" placeholder="0"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-right">
+            </div>
+
+            <div class="flex space-x-3 pt-4">
+              <button type="button" onclick="closeDefaultAccountModal()"
+                class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Batal</button>
+              <button type="submit"
+                class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">Simpan</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Edit Akun -->
+    <div id="editAccountModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center">
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Edit Akun</h3>
+            <button onclick="closeEditAccountModal()" class="text-gray-400 hover:text-gray-600">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+
+          <form id="editAccountForm" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Nama Akun</label>
+              <div class="px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                <span id="editAccountName" class="text-gray-900 font-medium"></span>
+              </div>
+            </div>
+
+            <!-- Input nominal untuk semua akun -->
+            <div id="editKasBalanceInput">
+              <label for="editAccountBalance" class="block text-sm font-medium text-gray-700 mb-1">Saldo Awal (Rp)</label>
+              <input type="text" id="editAccountBalance" inputmode="numeric" placeholder="0"
+                class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-right">
+            </div>
+
+            <div class="flex space-x-3 pt-4">
+              <button type="button" onclick="closeEditAccountModal()"
+                class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Batal</button>
+              <button type="submit"
+                class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">Update</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Konfirmasi Hapus -->
+    <div id="deleteConfirmModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center">
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div class="p-6">
+          <div class="flex items-center justify-center mb-4">
+            <span class="material-icons text-red-500 text-4xl">warning</span>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Konfirmasi Hapus</h3>
+          <p class="text-gray-600 text-center mb-6" id="deleteConfirmMessage"></p>
+
+          <div class="flex space-x-3">
+            <button onclick="closeDeleteConfirmModal()"
+              class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Batal</button>
+            <button onclick="confirmDeleteAccount()"
+              class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">Hapus</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Konfirmasi Hapus Semua Akun -->
+    <div id="deleteAllAccountsModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center">
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div class="p-6">
+          <div class="flex items-center justify-center mb-4">
+            <span class="material-icons text-red-500 text-4xl">delete_sweep</span>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Konfirmasi Hapus Semua</h3>
+          <p class="text-gray-600 text-center mb-6">Apakah Anda yakin ingin menghapus semua akun? Tindakan ini tidak
+            dapat dibatalkan.</p>
+
+          <div class="flex space-x-3">
+            <button onclick="closeDeleteAllAccountsModal()"
+              class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Batal</button>
+            <button onclick="confirmDeleteAllAccounts()"
+              class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">Hapus
+              Semua</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Konfirmasi Logout -->
+    <div id="logoutConfirmModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center">
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div class="p-6">
+          <div class="flex items-center justify-center mb-4">
+            <span class="material-icons text-blue-500 text-4xl">logout</span>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Konfirmasi Logout</h3>
+          <p class="text-gray-600 text-center mb-6">Apakah Anda yakin ingin keluar?</p>
+
+          <div class="flex space-x-3">
+            <button onclick="closeLogoutConfirmModal()"
+              class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Batal</button>
+            <button onclick="confirmLogout()"
+              class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+
+
+      let accounts = [];
+      let selectedDefaultAccount = '';
+      let editingAccountId = null;
+      let deletingAccountId = null;
+
+      // Toast Notification System
+      function showToast(message, type = 'info') {
+        const toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) return;
+
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+          <div class="toast-content">
+            <div class="toast-icon">
+              <span class="material-icons">${getToastIcon(type)}</span>
+            </div>
+            <div class="toast-message">${message}</div>
+            <button class="toast-close" onclick="closeToast(this)">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        // Show toast with animation
+        setTimeout(() => toast.classList.add('show'), 100);
+
+        // Auto close after 5 seconds
+        setTimeout(() => closeToast(toast.querySelector('.toast-close')), 5000);
+      }
+
+      function getToastIcon(type) {
+        const icons = {
+          'success': 'check_circle',
+          'error': 'error',
+          'warning': 'warning',
+          'info': 'info'
+        };
+        return icons[type] || 'info';
+      }
+
+      function closeToast(button) {
+        const toast = button.closest('.toast');
+        if (toast) {
+          toast.classList.remove('show');
+          setTimeout(() => toast.remove(), 300);
+        }
+      }
+
+      // Toggle dropdown
+      document.getElementById('addAccountBtn').addEventListener('click', function (e) {
+        e.stopPropagation();
+        const dropdown = document.getElementById('accountDropdown');
+        dropdown.classList.toggle('hidden');
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function () {
+        document.getElementById('accountDropdown').classList.add('hidden');
+      });
+
+      // Prevent dropdown from closing when clicking inside
+      document.getElementById('accountDropdown').addEventListener('click', function (e) {
+        e.stopPropagation();
+      });
+
+      function generateAccountCode() {
+        const maxCode = accounts.reduce((max, account) => {
+          const codeNum = parseInt(account.code || '0');
+          return Math.max(max, codeNum);
+        }, 0);
+        return maxCode + 1;
+      }
+
+      function formatRupiah(number) {
+        return new Intl.NumberFormat('id-ID', {
+          style: 'currency',
+          currency: 'IDR',
+          minimumFractionDigits: 0
+        }).format(number || 0);
+      }
+
+      // Format input nominal saat mengetik: 10000 -> 10.000
+      function formatNumberGrouping(value) {
+        const digits = (value || '').toString().replace(/\D+/g, '');
+        if (!digits) return '';
+        return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      }
+
+      function parseGroupedNumber(value) {
+        const digits = (value || '').toString().replace(/\D+/g, '');
+        return parseFloat(digits || '0');
+      }
+
+      function formatDate(dateString) {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('id-ID', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+      }
+
+      async function loadAccounts() {
+        try {
+          // Check if API is available
+          if (!window.KeuTrackAPI) {
+            console.error('❌ [AKUN PAGE] KeuTrackAPI not available');
+            showToast('API tidak tersedia. Pastikan backend berjalan di port 3001', 'error');
+            return;
+          }
+
+          accounts = await window.KeuTrackAPI.getAccounts();
+          console.log('✅ [AKUN PAGE] Accounts loaded:', accounts.length, 'accounts');
+          
+          // Debug: Log account structure
+          if (accounts.length > 0) {
+            console.log('🔍 [DEBUG] Sample account structure:', accounts[0]);
+            console.log('🔍 [DEBUG] Account IDs:', accounts.map(a => ({ id: a.id, name: a.name, type: typeof a.id })));
+          }
+          
+          displayAccounts();
+        } catch (error) {
+          console.error('Error loading accounts:', error);
+          showToast('Gagal memuat data akun: ' + error.message, 'error');
+        }
+      }
+
+      function displayAccounts() {
+        const tableBody = document.getElementById('accountsTableBody');
+        if (!tableBody) {
+          console.error('❌ [DISPLAY] Table body element not found');
+          return;
+        }
+
+        if (accounts.length === 0) {
+          tableBody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Belum ada akun</td></tr>';
+          return;
+        }
+
+        console.log('🔨 [DISPLAY] Generating table for', accounts.length, 'accounts');
+        
+        const tableHTML = accounts.map(account => {
+          console.log('🔨 [ROW] Creating row for account:', account.id, '-', account.name);
+          return `
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="px-4 py-3 text-sm font-mono text-gray-900">${account.code || '-'}</td>
+          <td class="px-4 py-3 text-sm font-medium text-gray-900">${account.name}</td>
+          <td class="px-4 py-3 text-sm font-medium text-gray-900">${account.balance && account.balance > 0 ? formatRupiah(account.balance) : '-'}</td>
+          <td class="px-4 py-3 text-sm text-gray-600">${formatDate(account.created_at || account.date)}</td>
+          <td class="px-4 py-3 text-sm font-mono text-gray-900">${account.codeRef || account.code || '-'}</td>
+          <td class="px-4 py-3 text-sm">
+            <div class="flex space-x-2">
+              <button onclick="editAccount('${account.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Edit Akun">
+                <span class="material-icons text-lg">edit</span>
+              </button>
+              <button onclick="deleteAccount('${account.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded transition-colors" title="Hapus Akun">
+                <span class="material-icons text-lg">delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>`;
+        }).join('');
+        
+        tableBody.innerHTML = tableHTML;
+        console.log('✅ [DISPLAY] Table updated successfully');
+      }
+
+      function openManualAccountModal() {
+        document.getElementById('accountDropdown').classList.add('hidden');
+        document.getElementById('manualAccountModal').classList.remove('hidden');
+        document.getElementById('manualAccountName').focus();
+
+        // Tampilkan input saldo awal untuk semua akun (opsional)
+        document.getElementById('kasBalanceInput').classList.remove('hidden');
+        document.getElementById('manualAccountBalance').value = '';
+      }
+
+      function closeManualAccountModal() {
+        document.getElementById('manualAccountModal').classList.add('hidden');
+        document.getElementById('manualAccountName').value = '';
+      }
+
+      function selectDefaultAccount(accountName) {
+        selectedDefaultAccount = accountName;
+        document.getElementById('selectedDefaultAccountName').textContent = accountName;
+        document.getElementById('accountDropdown').classList.add('hidden');
+        document.getElementById('defaultAccountModal').classList.remove('hidden');
+
+        // Tampilkan input nominal untuk semua akun (opsional)
+        const kasInput = document.getElementById('defaultKasBalanceInput');
+        kasInput.classList.remove('hidden');
+        document.getElementById('defaultAccountBalance').focus();
+      }
+
+      function closeDefaultAccountModal() {
+        document.getElementById('defaultAccountModal').classList.add('hidden');
+        selectedDefaultAccount = '';
+        document.getElementById('defaultAccountForm').reset();
+      }
+
+      async function addAccount(accountData) {
+        try {
+          // Check if API is available
+          if (!window.KeuTrackAPI) {
+            showToast('API tidak tersedia. Pastikan backend berjalan di port 3001', 'error');
+            return;
+          }
+
+          const newAccount = {
+            name: accountData.name,
+            balance: accountData.balance || 0,
+            code: generateAccountCode(),
+            category: accountData.category || null
+          };
+
+          const savedAccount = await window.KeuTrackAPI.createAccount(newAccount);
+          showToast('✅ Akun berhasil ditambahkan', 'success');
+
+          closeManualAccountModal();
+          closeDefaultAccountModal();
+          await loadAccounts();
+        } catch (error) {
+          console.error('Error adding account:', error);
+          showToast('❌ Gagal menambahkan akun: ' + error.message, 'error');
+        }
+      }
+
+      function editAccount(accountId) {
+        console.log('🔧 [EDIT] Attempting to edit account ID:', accountId);
+        const account = accounts.find(a => a.id == accountId); // Use loose equality
+        if (!account) {
+          console.error('❌ [EDIT] Account not found for ID:', accountId);
+          showToast('Akun tidak ditemukan', 'error');
+          return;
+        }
+
+        console.log('✅ [EDIT] Account found:', account.name);
+        editingAccountId = accountId;
+        document.getElementById('editAccountName').textContent = account.name;
+        document.getElementById('editAccountModal').classList.remove('hidden');
+
+        // Tampilkan input nominal untuk SEMUA akun - bukan hanya akun tertentu
+        const kasInput = document.getElementById('editKasBalanceInput');
+        kasInput.classList.remove('hidden'); // Selalu tampilkan
+        document.getElementById('editAccountBalance').value = formatNumberGrouping(String(account.balance || 0));
+      }
+
+      function closeEditAccountModal() {
+        document.getElementById('editAccountModal').classList.add('hidden');
+        editingAccountId = null;
+      }
+
+      async function updateAccount() {
+        if (!editingAccountId) {
+          showToast('ID akun tidak valid', 'error');
+          return;
+        }
+
+        // Check if API is available
+        if (!window.KeuTrackAPI) {
+          showToast('API tidak tersedia. Pastikan backend berjalan di port 3001', 'error');
+          return;
+        }
+
+        const account = accounts.find(a => a.id == editingAccountId); // Use loose equality
+        if (!account) {
+          showToast('Akun tidak ditemukan', 'error');
+          return;
+        }
+
+        try {
+          let updateData = {
+            name: account.name,
+            balance: account.balance,
+            category: account.category
+          };
+
+          // Update saldo untuk SEMUA akun - selalu proses input saldo
+          const balanceInput = document.getElementById('editAccountBalance');
+          if (balanceInput && balanceInput.value.trim() !== '') {
+            const newBalance = parseGroupedNumber(balanceInput.value);
+            if (!isNaN(newBalance) && newBalance >= 0) {
+              updateData.balance = newBalance;
+            }
+          }
+
+          console.log('🚀 [UPDATE] Updating account:', editingAccountId, 'with data:', updateData);
+          
+          await window.KeuTrackAPI.updateAccount(editingAccountId, updateData);
+          showToast('✅ Akun berhasil diupdate', 'success');
+          closeEditAccountModal();
+          await loadAccounts();
+        } catch (error) {
+          console.error('Error updating account:', error);
+          showToast('❌ Gagal mengupdate akun: ' + error.message, 'error');
+        }
+      }
+
+      function deleteAccount(accountId) {
+        console.log('🗑️ [DELETE] Attempting to delete account ID:', accountId);
+        const account = accounts.find(a => a.id == accountId); // Use loose equality
+        if (!account) {
+          console.error('❌ [DELETE] Account not found for ID:', accountId);
+          showToast('Akun tidak ditemukan', 'error');
+          return;
+        }
+
+        console.log('✅ [DELETE] Account found:', account.name);
+        deletingAccountId = accountId;
+        document.getElementById('deleteConfirmMessage').textContent = `Apakah Anda yakin ingin menghapus akun "${account.name}"?`;
+        document.getElementById('deleteConfirmModal').classList.remove('hidden');
+      }
+
+      function closeDeleteConfirmModal() {
+        document.getElementById('deleteConfirmModal').classList.add('hidden');
+        deletingAccountId = null;
+      }
+
+      async function confirmDeleteAccount() {
+        if (!deletingAccountId) {
+          showToast('ID akun tidak valid', 'error');
+          return;
+        }
+
+        // Check if API is available
+        if (!window.KeuTrackAPI) {
+          showToast('API tidak tersedia. Pastikan backend berjalan di port 3001', 'error');
+          return;
+        }
+
+        try {
+          console.log('🚀 [DELETE] Deleting account ID:', deletingAccountId);
+          await window.KeuTrackAPI.deleteAccount(deletingAccountId);
+          showToast('✅ Akun berhasil dihapus', 'success');
+          closeDeleteConfirmModal();
+          await loadAccounts();
+        } catch (error) {
+          console.error('Error deleting account:', error);
+          showToast('❌ Gagal menghapus akun: ' + error.message, 'error');
+        }
+      }
+
+      function closeDeleteAllAccountsModal() {
+        document.getElementById('deleteAllAccountsModal').classList.add('hidden');
+      }
+
+      async function confirmDeleteAllAccounts() {
+        try {
+          // Check if API is available
+          if (!window.KeuTrackAPI) {
+            showToast('API tidak tersedia. Pastikan backend berjalan di port 3001', 'error');
+            return;
+          }
+
+          // Delete all accounts individually via API
+          for (const account of accounts) {
+            await window.KeuTrackAPI.deleteAccount(account.id);
+          }
+          showToast('✅ Semua akun berhasil dihapus', 'success');
+          closeDeleteAllAccountsModal();
+          await loadAccounts();
+        } catch (error) {
+          console.error('Error deleting all accounts:', error);
+          showToast('❌ Gagal menghapus semua akun: ' + error.message, 'error');
+        }
+      }
+
+      function closeLogoutConfirmModal() {
+        document.getElementById('logoutConfirmModal').classList.add('hidden');
+      }
+
+      function confirmLogout() {
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('userPreferences');
+        showToast('Berhasil keluar', 'info');
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 1000);
+      }
+
+      // Event Listeners
+      document.addEventListener('DOMContentLoaded', function () {
+        console.log('🚀 [AKUN PAGE] Page loading...');
+        console.log('🌐 [AKUN PAGE] Expected API URL: http://localhost:3001/api');
+
+        // Wait a bit for API to load, then load accounts
+        setTimeout(() => {
+          loadAccounts();
+        }, 500);
+
+        // Juga panggil saat mobile menu button diklik (jika ada)
+        const mobileMenuButton = document.getElementById('mobileMenuButton');
+        if (mobileMenuButton) {
+          mobileMenuButton.addEventListener('click', setActiveMenu);
+        }
+      });
+
+      // Manual account form
+      document.getElementById('manualAccountForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const accountName = document.getElementById('manualAccountName').value.trim();
+        let balance = 0;
+
+        // Ambil nilai dari input saldo awal (opsional)
+        const balanceInput = document.getElementById('manualAccountBalance').value;
+        if (balanceInput && balanceInput.trim() !== '') {
+          balance = parseGroupedNumber(balanceInput);
+          if (isNaN(balance)) {
+            balance = 0; // Jika parsing gagal, set ke 0
+          }
+        }
+
+        const formData = {
+          name: accountName,
+          balance: balance
+        };
+
+        if (!formData.name) {
+          showToast('Mohon lengkapi nama akun', 'error');
+          return;
+        }
+
+        addAccount(formData);
+      });
+
+      // Default account form
+      document.getElementById('defaultAccountForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        let balance = 0;
+
+        // Ambil nilai dari input saldo awal (opsional)
+        const balanceInput = document.getElementById('defaultAccountBalance').value;
+        if (balanceInput && balanceInput.trim() !== '') {
+          balance = parseGroupedNumber(balanceInput);
+          if (isNaN(balance)) {
+            balance = 0; // Jika parsing gagal, set ke 0
+          }
+        }
+
+        const formData = {
+          name: selectedDefaultAccount,
+          balance: balance
+        };
+
+        addAccount(formData);
+      });
+
+      // Edit account form - hanya update nama jika diperlukan
+      document.getElementById('editAccountForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        await updateAccount();
+      });
+
+      // Event listener untuk menampilkan input nominal saat nama akun berubah
+      document.getElementById('manualAccountName').addEventListener('input', function (e) {
+        const accountName = e.target.value.trim();
+        const kasInput = document.getElementById('kasBalanceInput');
+
+        if (accountName.toUpperCase().includes('MODAL')) {
+          kasInput.classList.remove('hidden');
+        } else {
+          kasInput.classList.add('hidden');
+          document.getElementById('manualAccountBalance').value = '';
+        }
+      });
+
+      // Logout button
+      document.getElementById('logoutButton').addEventListener('click', () => {
+        document.getElementById('logoutConfirmModal').classList.remove('hidden');
+      });
+
+      // Hapus semua akun button
+      document.getElementById('deleteAllAccountsBtn').addEventListener('click', () => {
+        if (accounts.length === 0) {
+          showToast('Tidak ada akun untuk dihapus', 'warning');
+          return;
+        }
+        document.getElementById('deleteAllAccountsModal').classList.remove('hidden');
+      });
+
+      // Formatting realtime untuk input nominal KAS
+      const manualBal = document.getElementById('manualAccountBalance');
+      const defaultBal = document.getElementById('defaultAccountBalance');
+      const editBal = document.getElementById('editAccountBalance');
+      [manualBal, defaultBal, editBal].forEach(inp => {
+        if (!inp) return;
+        inp.addEventListener('input', (e) => {
+          const raw = e.target.value;
+          e.target.value = formatNumberGrouping(raw);
+        });
+        inp.addEventListener('blur', (e) => {
+          e.target.value = formatNumberGrouping(e.target.value);
+        });
+      });
+
+      // Function untuk mengatur menu aktif berdasarkan halaman saat ini
+      function setActiveMenu() {
+        // Hapus semua kelas aktif terlebih dahulu
+        document.querySelectorAll('nav a').forEach(link => {
+          link.classList.remove('bg-white/20');
+        });
+
+        // Dapatkan nama halaman saat ini
+        const currentPage = window.location.pathname.split('/').pop();
+
+        // Temukan link yang sesuai dan tambahkan kelas aktif
+        document.querySelectorAll('nav a').forEach(link => {
+          const href = link.getAttribute('href');
+          if (href === currentPage) {
+            link.classList.add('bg-white/20');
+          }
+        });
+      }
+
+      // Panggil function saat halaman dimuat
+      document.addEventListener('DOMContentLoaded', function () {
+        setActiveMenu();
+
+        // Juga panggil saat mobile menu button diklik (jika ada)
+        const mobileMenuButton = document.getElementById('mobileMenuButton');
+        if (mobileMenuButton) {
+          mobileMenuButton.addEventListener('click', setActiveMenu);
+        }
+      });
+
+      // Mobile menu functionality
+      const mobileMenuButton = document.getElementById("mobileMenuButton");
+      const mobileMenu = document.querySelector(".mobile-menu");
+      const mobileOverlay = document.getElementById("mobileOverlay");
+
+      function toggleMobileMenu() {
+        mobileMenu.classList.toggle("active");
+        mobileOverlay.classList.toggle("active");
+        document.body.style.overflow = mobileMenu.classList.contains("active") ? "hidden" : "";
+      }
+
+      function closeMobileMenu() {
+        mobileMenu.classList.remove("active");
+        mobileOverlay.classList.remove("active");
+        document.body.style.overflow = "";
+      }
+
+      if (mobileMenuButton && mobileMenu && mobileOverlay) {
+        mobileMenuButton.addEventListener("click", toggleMobileMenu);
+        mobileOverlay.addEventListener("click", closeMobileMenu);
+
+        // Close menu ketika link di klik
+        document.querySelectorAll('.mobile-menu a').forEach(link => {
+          link.addEventListener('click', closeMobileMenu);
+        });
+      }
+
+      // Expose functions to global scope for onclick attributes
+      window.editAccount = editAccount;
+      window.deleteAccount = deleteAccount;
+      window.openManualAccountModal = openManualAccountModal;
+      window.closeManualAccountModal = closeManualAccountModal;
+      window.selectDefaultAccount = selectDefaultAccount;
+      window.closeDefaultAccountModal = closeDefaultAccountModal;
+      window.closeEditAccountModal = closeEditAccountModal;
+      window.closeDeleteConfirmModal = closeDeleteConfirmModal;
+      window.confirmDeleteAccount = confirmDeleteAccount;
+      window.closeDeleteAllAccountsModal = closeDeleteAllAccountsModal;
+      window.confirmDeleteAllAccounts = confirmDeleteAllAccounts;
+      window.closeLogoutConfirmModal = closeLogoutConfirmModal;
+      window.confirmLogout = confirmLogout;
+      window.closeToast = closeToast;
+      
+      // Debug: Log exposed functions
+      console.log('🔧 [AKUN PAGE] Functions exposed to global scope:');
+      console.log('  - editAccount:', typeof window.editAccount);
+      console.log('  - deleteAccount:', typeof window.deleteAccount);
+      console.log('  - confirmDeleteAccount:', typeof window.confirmDeleteAccount);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KeuTrack - Login</title>
+    <link rel="icon" type="image/svg+xml" href="./Images/LOGO KT.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Google OAuth -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        // Suppress Tailwind CSS production warning
+        if (typeof window !== 'undefined' && window.console && window.console.warn) {
+          const originalWarn = console.warn;
+          console.warn = function(...args) {
+            if (args[0] && args[0].includes && args[0].includes('should not be used in production')) {
+              return; // Suppress Tailwind production warning
+            }
+            originalWarn.apply(console, args);
+          };
+        }
+        
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2c3e50',
+                        secondary: '#64748b',
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        danger: '#EF4444',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Tambahan CSS untuk mobile optimization */
+        @media (max-width: 640px) {
+            .mobile-padding {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            .mobile-text {
+                font-size: 1.25rem;
+            }
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .loading-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2c3e50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-md w-full space-y-8">
+            <!-- Logo dan Judul -->
+            <div class="text-center">
+                <img src="./Images/LOGO KT.svg" alt="KeuTrack Logo" class="mx-auto w-32 h-32">
+                <h2 class="mt-6 text-3xl font-bold text-gray-900">Selamat Datang</h2>
+                <p class="mt-2 text-sm text-gray-600">Masuk ke akun KeuTrack Anda</p>
+            </div>
+
+            <!-- Form Login -->
+            <form id="loginForm" class="mt-8 space-y-6">
+                <div class="rounded-md shadow-sm space-y-4">
+                    <div>
+                        <label for="email" class="sr-only">Email</label>
+                        <input id="email" name="email" type="email" required class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" placeholder="Email">
+                    </div>
+                    <div>
+                        <label for="password" class="sr-only">Password</label>
+                        <input id="password" name="password" type="password" required class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" placeholder="Password">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                        <label for="remember-me" class="ml-2 block text-sm text-gray-900">Ingat saya</label>
+                    </div>
+
+                    <div class="text-sm">
+                        <a href="#" class="font-medium text-primary hover:text-primary/80">Lupa password?</a>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                            <span class="material-icons text-sm">login</span>
+                        </span>
+                        Masuk
+                    </button>
+                </div>
+
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-gray-50 text-gray-500">Atau masuk dengan</span>
+                    </div>
+                </div>
+
+                <!-- Google Sign-In Button -->
+                <div id="g_id_onload"
+                     data-client_id="109474537566-johb2fn97km03he16s3cump2k0lf63ht.apps.googleusercontent.com"
+                     data-callback="handleCredentialResponse">
+                </div>
+                <div class="g_id_signin w-full"
+                     data-type="standard"
+                     data-size="large"
+                     data-theme="outline"
+                     data-text="signin_with"
+                     data-shape="rectangular"
+                     data-logo_alignment="left"
+                     data-width="100%">
+                </div>
+            </form>
+
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Belum punya akun?
+                <a href="#" class="font-medium text-primary hover:text-primary/80">Daftar sekarang</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Fungsi untuk menangani response dari Google Sign-In
+        async function handleCredentialResponse(response) {
+            try {
+                // Decode JWT token
+                const responsePayload = jwt_decode(response.credential);
+                
+                console.log("ID: " + responsePayload.sub);
+                console.log('Full Name: ' + responsePayload.name);
+                console.log('Given Name: ' + responsePayload.given_name);
+                console.log('Family Name: ' + responsePayload.family_name);
+                console.log("Image URL: " + responsePayload.picture);
+                console.log("Email: " + responsePayload.email);
+                
+                // Simpan data user ke localStorage untuk session management
+                const userData = {
+                    id: responsePayload.sub,
+                    name: responsePayload.name,
+                    email: responsePayload.email,
+                    picture: responsePayload.picture,
+                    loginMethod: 'google'
+                };
+                
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+                
+                // Redirect ke dashboard
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                console.error('Error handling Google sign-in:', error);
+                alert('Terjadi kesalahan saat login dengan Google');
+            }
+        }
+
+        // Fungsi untuk menangani form login manual
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                alert('Mohon isi email dan password');
+                return;
+            }
+            
+            try {
+                // Gunakan API untuk login
+                const response = await KeuTrackAPI.login(email, password);
+                
+                if (response.success) {
+                    // Simpan data user ke localStorage untuk session management
+                    const userData = {
+                        id: response.user.id,
+                        name: response.user.username,
+                        email: response.user.email,
+                        loginMethod: 'manual'
+                    };
+                    
+                    localStorage.setItem('currentUser', JSON.stringify(userData));
+                    
+                    // Redirect ke dashboard
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert('Login gagal: ' + (response.error || 'Username atau password salah'));
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Terjadi kesalahan saat login: ' + error.message);
+            }
+        });
+
+        // Fungsi untuk registrasi
+        async function handleRegister(username, email, password) {
+            try {
+                const response = await KeuTrackAPI.register(username, email, password);
+                
+                if (response.success) {
+                    alert('Registrasi berhasil! Silakan login.');
+                    // Reset form atau redirect ke login
+                } else {
+                    alert('Registrasi gagal: ' + (response.error || 'Terjadi kesalahan'));
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                alert('Terjadi kesalahan saat registrasi: ' + error.message);
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+    <script src="js/api.js"></script>
+</body>
+</html> 

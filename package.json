@@ -1,0 +1,39 @@
+{
+  "name": "keutrack-pencatatan-sederhana",
+  "version": "1.0.0",
+  "description": "Aplikasi manajemen keuangan sederhana dengan HTML, CSS, dan JavaScript",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server . -p 2000 -o",
+    "dev": "npx live-server --port=2000 --open=/dashboard.html",
+    "build": "echo 'Build completed - static files ready'",
+    "deploy": "netlify deploy --prod",
+    "test": "echo 'No tests specified'",
+    "backend": "cd backend && node server.js",
+    "full": "start \"Backend\" cmd /k \"cd backend && node server.js\" && npx http-server . -p 2000 -o"
+  },
+  "keywords": [
+    "keuangan",
+    "manajemen",
+    "transaksi",
+    "dashboard",
+    "html",
+    "css",
+    "javascript"
+  ],
+  "author": "Tim Pengembang KeuTrack",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.2"
+  },
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/keutrack-pencatatan-sederhana.git"
+  },
+  "bugs": {
+    "url": "https://github.com/username/keutrack-pencatatan-sederhana/issues"
+  },
+  "homepage": "https://github.com/username/keutrack-pencatatan-sederhana#readme"
+}

@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>KeuTrack - Profil</title>
+  <!-- Login check disabled for development -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="js/api.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Poppins', 'sans-serif'],
+          },
+          colors: {
+            primary: '#2c3e50',
+            secondary: '#64748b',
+            success: '#10B981',
+            warning: '#F59E0B',
+            danger: '#EF4444',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @media (max-width: 768px) {
+      .mobile-menu {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+      }
+
+      .mobile-menu.active {
+        transform: translateX(0);
+      }
+    }
+
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #2c3e50;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .profile-image {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 4px solid #fff;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .profile-image-upload {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: #2c3e50;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .profile-image-upload:hover {
+      background: #1a2530;
+    }
+
+    /* Dark theme styles */
+    .dark-theme {
+      background-color: #1a1a1a;
+      color: #ffffff;
+    }
+
+    .dark-theme .bg-white {
+      background-color: #2d2d2d;
+      color: #ffffff;
+    }
+
+    .dark-theme .text-gray-700 {
+      color: #e0e0e0;
+    }
+
+    .dark-theme .text-gray-500 {
+      color: #a0a0a0;
+    }
+
+    .dark-theme .border-gray-300 {
+      border-color: #404040;
+    }
+
+    .dark-theme .hover\:bg-white\/10:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 400px;
+    }
+
+    .modal.dark-theme .modal-content {
+      background-color: #2d2d2d;
+      color: #ffffff;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 font-sans">
+  <!-- Mobile Header -->
+  <div class="lg:hidden fixed top-0 left-0 right-0 bg-primary text-white p-4 z-50">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button id="mobileMenuButton" class="text-white">
+          <span class="material-icons">menu</span>
+        </button>
+        <img src="./Images/LOGO KT.svg" alt="KeuTrack Logo" class="w-10 h-10">
+        <span class="text-xl font-semibold">KeuTrack</span>
+      </div>
+      <button class="text-white">
+        <span class="material-icons">notifications</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="fixed inset-y-0 left-0 w-64 bg-primary text-white mobile-menu lg:translate-x-0 z-40">
+    <div class="p-6 hidden lg:block">
+      <div class="flex items-center space-x-4">
+        <img src="./Images/LOGO KT.svg" alt="KeuTrack Logo" class="w-[70px] h-[70px]">
+        <span class="text-2xl font-semibold mt-1">KeuTrack</span>
+      </div>
+    </div>
+    <nav class="mt-20 lg:mt-6">
+      <ul class="space-y-2 px-4">
+        <li>
+          <a href="dashboard.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-white/20">
+            <span class="material-icons">analytics</span><span>Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="akun.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">account_balance</span>
+            <span>Pengelolaan Akun</span>
+          </a>
+        </li>
+        <li>
+          <a href="transaksi.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">swap_horiz</span>
+            <span>Transaksi</span>
+          </a>
+        </li>
+        <li>
+          <a href="siklus_akuntansi.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">account_tree</span>
+            <span>Siklus Akuntansi</span>
+          </a>
+        </li>
+        <li>
+          <a href="laporankeuangan.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">summarize</span>
+            <span>Laporan Keuangan</span>
+          </a>
+        </li>
+        <li>
+          <a href="profil.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">person</span>
+            <span data-translate="profile">Profil</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="absolute bottom-0 w-full p-4">
+      <button id="logoutButton"
+        class="flex items-center space-x-3 w-full px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+        <span class="material-icons">logout</span>
+        <span data-translate="logout">Log Out</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-4 lg:p-8 mt-16 lg:mt-0">
+    <!-- Header -->
+    <div class="bg-primary text-white rounded-lg p-4 lg:p-6 mb-6 lg:mb-8">
+      <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start space-y-4 lg:space-y-0">
+        <div>
+          <h1 class="text-xl lg:text-2xl font-semibold" data-translate="profile">Profil</h1>
+          <p class="text-white/80 mt-1 text-sm lg:text-base">Informasi profil pengguna</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Profile Info -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <div class="flex flex-col items-center">
+            <div class="relative">
+              <img id="profileImage" src="./Images/default-avatar.png" alt="Profile" class="profile-image">
+              <label for="imageUpload" class="profile-image-upload">
+                <span class="material-icons text-sm">edit</span>
+              </label>
+              <input type="file" id="imageUpload" accept="image/*" class="hidden" onchange="updateProfileImage(event)">
+            </div>
+            <div class="mt-4 text-center">
+              <div class="flex items-center justify-center space-x-2">
+                <h2 id="userName" class="text-xl font-semibold">John Doe</h2>
+                <button onclick="editName()" class="text-primary hover:text-primary/80">
+                  <span class="material-icons text-sm">edit</span>
+                </button>
+              </div>
+              <p id="userEmail" class="text-gray-500">john@example.com</p>
+              <p id="userRole" class="text-sm text-gray-500 mt-1">Administrator</p>
+              <div class="flex items-center justify-center space-x-2 mt-1">
+                <p id="joinDate" class="text-sm text-gray-500">Bergabung sejak Januari 2024</p>
+                <button onclick="editJoinDate()" class="text-primary hover:text-primary/80">
+                  <span class="material-icons text-sm">edit</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preferences -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <div class="space-y-6">
+            <div>
+              <h3 class="text-lg font-semibold mb-4" data-translate="preferences">Preferensi</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="language">Bahasa</label>
+                  <select id="language"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                    <option value="id">Indonesia</option>
+                    <option value="en">English</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="theme">Tema</label>
+                  <select id="theme"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1" data-translate="dateFormat">Format
+                    Tanggal</label>
+                  <select id="dateFormat"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                    <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                    <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Zona Waktu</label>
+                  <select id="timezone"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                    <option value="Asia/Jakarta">WIB (UTC+7)</option>
+                    <option value="Asia/Makassar">WITA (UTC+8)</option>
+                    <option value="Asia/Jayapura">WIT (UTC+9)</option>
+                  </select>
+                </div>
+                <button onclick="saveUserPreferences()"
+                  class="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                  Simpan Preferensi
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Modal Edit Nama -->
+  <div id="editNameModal" class="modal">
+    <div class="modal-content">
+      <h3 class="text-lg font-semibold mb-4">Edit Nama</h3>
+      <input type="text" id="newNameInput"
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-primary">
+      <div class="flex space-x-2">
+        <button onclick="saveNewName()"
+          class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">Simpan</button>
+        <button onclick="closeEditNameModal()"
+          class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Edit Tanggal Bergabung -->
+  <div id="editDateModal" class="modal">
+    <div class="modal-content">
+      <h3 class="text-lg font-semibold mb-4">Edit Tanggal Bergabung</h3>
+      <input type="text" id="newDateInput"
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-primary"
+        placeholder="Contoh: Januari 2024">
+      <div class="flex space-x-2">
+        <button onclick="saveNewDate()"
+          class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">Simpan</button>
+        <button onclick="closeEditDateModal()"
+          class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Mobile Menu Toggle - PERBAIKAN #2: Mobile menu overlay
+    const mobileMenuButton = document.getElementById('mobileMenuButton');
+    const mobileMenu = document.querySelector('.mobile-menu');
+    const overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 bg-black/50 z-30 hidden';
+    document.body.appendChild(overlay);
+
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('active');
+      overlay.classList.toggle('hidden');
+    });
+
+    overlay.addEventListener('click', () => {
+      mobileMenu.classList.remove('active');
+      overlay.classList.add('hidden');
+    });
+
+    // PERBAIKAN #1: Fungsi logout yang benar dengan redirect
+    function handleLogout() {
+      if (confirm('Apakah Anda yakin ingin keluar?')) {
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('userPreferences');
+        window.location.href = 'login.html';
+      }
+    }
+
+    // PERBAIKAN #3: Modal untuk edit nama
+    function editName() {
+      const currentName = document.getElementById('userName').textContent;
+      document.getElementById('newNameInput').value = currentName;
+      document.getElementById('editNameModal').style.display = 'block';
+      document.getElementById('newNameInput').focus();
+    }
+
+    function closeEditNameModal() {
+      document.getElementById('editNameModal').style.display = 'none';
+    }
+
+    function saveNewName() {
+      const newName = document.getElementById('newNameInput').value.trim();
+      if (newName !== '') {
+        const user = JSON.parse(localStorage.getItem('currentUser')) || {};
+        user.name = newName;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        document.getElementById('userName').textContent = newName;
+        closeEditNameModal();
+        showNotification('Nama berhasil diperbarui', 'success');
+      } else {
+        showNotification('Nama tidak boleh kosong', 'error');
+      }
+    }
+
+    // PERBAIKAN #3: Modal untuk edit tanggal bergabung
+    function editJoinDate() {
+      const currentDate = document.getElementById('joinDate').textContent.replace('Bergabung sejak ', '');
+      document.getElementById('newDateInput').value = currentDate;
+      document.getElementById('editDateModal').style.display = 'block';
+      document.getElementById('newDateInput').focus();
+    }
+
+    function closeEditDateModal() {
+      document.getElementById('editDateModal').style.display = 'none';
+    }
+
+    function saveNewDate() {
+      const newDate = document.getElementById('newDateInput').value.trim();
+      if (newDate !== '') {
+        const user = JSON.parse(localStorage.getItem('currentUser')) || {};
+        user.joinDate = newDate;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        document.getElementById('joinDate').textContent = `Bergabung sejak ${newDate}`;
+        closeEditDateModal();
+        showNotification('Tanggal bergabung berhasil diperbarui', 'success');
+      } else {
+        showNotification('Tanggal tidak boleh kosong', 'error');
+      }
+    }
+
+    // Fungsi untuk menampilkan loading
+    function showLoading() {
+      document.getElementById('loadingOverlay').classList.add('active');
+    }
+
+    // Fungsi untuk menyembunyikan loading
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
+    // Load user data
+    async function loadUserData() {
+      try {
+        // Load user data from API if available
+        const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
+        
+        // Set profile data
+        document.getElementById('userName').textContent = currentUser.name || 'John Doe';
+        document.getElementById('userEmail').textContent = currentUser.email || 'john@example.com';
+        document.getElementById('userRole').textContent = currentUser.role || 'Administrator';
+        document.getElementById('joinDate').textContent = `Bergabung sejak ${currentUser.joinDate || 'Januari 2024'}`;
+
+        // Set profile image if exists
+        if (currentUser.profileImage) {
+          document.getElementById('profileImage').src = currentUser.profileImage;
+        }
+
+        // Load preferences from localStorage (local settings)
+        const preferences = JSON.parse(localStorage.getItem('userPreferences')) || {};
+
+        // Set preferences
+        document.getElementById('language').value = preferences.language || 'id';
+        document.getElementById('theme').value = preferences.theme || 'light';
+        document.getElementById('dateFormat').value = preferences.dateFormat || 'DD/MM/YYYY';
+        document.getElementById('timezone').value = preferences.timezone || 'Asia/Jakarta';
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        showNotification('Gagal memuat data profil', 'error');
+      }
+    }
+
+    // Update profile image
+    function updateProfileImage(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const user = JSON.parse(localStorage.getItem('currentUser')) || {};
+          user.profileImage = e.target.result;
+          localStorage.setItem('currentUser', JSON.stringify(user));
+          document.getElementById('profileImage').src = e.target.result;
+          showNotification('Foto profil berhasil diperbarui', 'success');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // PERBAIKAN #4: Fungsi preferensi yang konsisten dan tema yang benar
+    function saveUserPreferences() {
+      const preferences = {
+        language: document.getElementById('language').value,
+        theme: document.getElementById('theme').value,
+        dateFormat: document.getElementById('dateFormat').value,
+        timezone: document.getElementById('timezone').value
+      };
+
+      localStorage.setItem('userPreferences', JSON.stringify(preferences));
+
+      // Terapkan perubahan
+      applyTheme(preferences.theme);
+      applyLanguage(preferences.language);
+
+      // Tampilkan notifikasi
+      showNotification('Preferensi berhasil disimpan', 'success');
+    }
+
+    // Fungsi untuk menerapkan tema
+    function applyTheme(theme) {
+      const body = document.body;
+      const modals = document.querySelectorAll('.modal');
+
+      if (theme === 'dark') {
+        body.classList.add('dark-theme');
+        modals.forEach(modal => modal.classList.add('dark-theme'));
+      } else {
+        body.classList.remove('dark-theme');
+        modals.forEach(modal => modal.classList.remove('dark-theme'));
+      }
+    }
+
+    // Fungsi untuk menerapkan bahasa
+    function applyLanguage(language) {
+      // Terjemahkan elemen-elemen UI
+      const translations = {
+        id: {
+          dashboard: 'Dasbor',
+          products: 'Produk/Item',
+          transactions: 'Transaksi',
+          reports: 'Laporan Keuangan',
+          history: 'Riwayat Transaksi',
+          export: 'Export/Backup',
+          profile: 'Profil',
+          logout: 'Log Out',
+          preferences: 'Preferensi',
+          language: 'Bahasa',
+          theme: 'Tema',
+          dateFormat: 'Format Tanggal'
+        },
+        en: {
+          dashboard: 'Dashboard',
+          products: 'Products/Items',
+          transactions: 'Transactions',
+          reports: 'Financial Reports',
+          history: 'Transaction History',
+          export: 'Export/Backup',
+          profile: 'Profile',
+          logout: 'Log Out',
+          preferences: 'Preferences',
+          language: 'Language',
+          theme: 'Theme',
+          dateFormat: 'Date Format'
+        }
+      };
+
+      // Update teks UI
+      const elements = document.querySelectorAll('[data-translate]');
+      elements.forEach(element => {
+        const key = element.getAttribute('data-translate');
+        if (translations[language][key]) {
+          element.textContent = translations[language][key];
+        }
+      });
+    }
+
+    // Fungsi untuk menampilkan notifikasi
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg ${type === 'success' ? 'bg-green-500' :
+          type === 'error' ? 'bg-red-500' :
+            'bg-blue-500'
+        } text-white z-50 transition-all duration-300 transform translate-x-full`;
+
+      notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <span class="material-icons">${type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info'}</span>
+          <span>${message}</span>
+        </div>
+      `;
+
+      document.body.appendChild(notification);
+
+      // Trigger animasi masuk
+      setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+      }, 100);
+
+      // Hapus notifikasi setelah 3 detik
+      setTimeout(() => {
+        notification.style.transform = 'translateX(full)';
+        setTimeout(() => {
+          notification.remove();
+        }, 300);
+      }, 3000);
+    }
+
+    // Event listener untuk perubahan preferensi
+    document.addEventListener('DOMContentLoaded', () => {
+      // Load user data dan preferensi
+      loadUserData();
+      loadUserPreferences();
+
+      // Event listener untuk perubahan bahasa
+      document.getElementById('language').addEventListener('change', function () {
+        saveUserPreferences();
+      });
+
+      // Event listener untuk perubahan tema
+      document.getElementById('theme').addEventListener('change', function () {
+        saveUserPreferences();
+      });
+
+      // Event listener untuk perubahan format tanggal
+      document.getElementById('dateFormat').addEventListener('change', function () {
+        saveUserPreferences();
+      });
+
+      // Event listener untuk perubahan timezone
+      document.getElementById('timezone').addEventListener('change', function () {
+        saveUserPreferences();
+      });
+
+      // Event listener untuk tombol logout
+      const logoutButton = document.getElementById('logoutButton');
+      if (logoutButton) {
+        logoutButton.addEventListener('click', handleLogout);
+      }
+
+      // Event listener untuk menutup modal dengan ESC
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          closeEditNameModal();
+          closeEditDateModal();
+        }
+      });
+
+      // Event listener untuk menutup modal dengan klik di luar
+      window.addEventListener('click', function (event) {
+        const nameModal = document.getElementById('editNameModal');
+        const dateModal = document.getElementById('editDateModal');
+
+        if (event.target === nameModal) {
+          closeEditNameModal();
+        }
+        if (event.target === dateModal) {
+          closeEditDateModal();
+        }
+      });
+    });
+
+    // Load user preferences saat halaman dimuat
+    function loadUserPreferences() {
+      const preferences = JSON.parse(localStorage.getItem('userPreferences')) || {
+        language: 'id',
+        theme: 'light',
+        dateFormat: 'DD/MM/YYYY',
+        timezone: 'Asia/Jakarta'
+      };
+
+      // Set nilai default untuk select
+      document.getElementById('language').value = preferences.language;
+      document.getElementById('theme').value = preferences.theme;
+      document.getElementById('dateFormat').value = preferences.dateFormat;
+      document.getElementById('timezone').value = preferences.timezone;
+
+      // Terapkan tema
+      applyTheme(preferences.theme);
+    }
+
+    // Function untuk mengatur menu aktif berdasarkan halaman saat ini
+    function setActiveMenu() {
+      // Hapus semua kelas aktif terlebih dahulu
+      document.querySelectorAll('nav a').forEach(link => {
+        link.classList.remove('bg-white/20');
+      });
+
+      // Dapatkan nama halaman saat ini
+      const currentPage = window.location.pathname.split('/').pop();
+
+      // Temukan link yang sesuai dan tambahkan kelas aktif
+      document.querySelectorAll('nav a').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href === currentPage) {
+          link.classList.add('bg-white/20');
+        }
+      });
+    }
+
+    // Panggil function saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', function () {
+      setActiveMenu();
+
+      // Juga panggil saat mobile menu button diklik (jika ada)
+      const mobileMenuButton = document.getElementById('mobileMenuButton');
+      if (mobileMenuButton) {
+        mobileMenuButton.addEventListener('click', setActiveMenu);
+      }
+    });
+  </script>
+</body>
+
+</html>

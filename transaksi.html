@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KeuTrack - Manajemen Transaksi</title>
+  <link rel="icon" type="image/svg+xml" href="./Images/LOGO KT.svg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="js/api.js"></script>
+  <script>
+    // Suppress Tailwind CSS production warning - Enhanced version
+    if (typeof window !== 'undefined' && window.console && window.console.warn) {
+      const originalWarn = console.warn;
+      console.warn = function(...args) {
+        if (args[0] && typeof args[0] === 'string') {
+          if (args[0].includes('should not be used in production') || 
+              args[0].includes('cdn.tailwindcss.com')) {
+            return; // Suppress Tailwind production warnings
+          }
+        }
+        originalWarn.apply(console, args);
+      };
+    }
+    
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Poppins', 'sans-serif'] },
+          colors: { primary: '#2c3e50', success: '#10B981', danger: '#EF4444' }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Toast Notification Styles */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      max-width: 350px;
+      padding: 16px 20px;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      transform: translateX(400px);
+      transition: transform 0.3s ease-in-out;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast.success {
+      background-color: #10B981;
+      color: white;
+      border-left: 4px solid #059669;
+    }
+
+    .toast.error {
+      background-color: #EF4444;
+      color: white;
+      border-left: 4px solid #DC2626;
+    }
+
+    .toast.info {
+      background-color: #3B82F6;
+      color: white;
+      border-left: 4px solid #2563EB;
+    }
+
+    .toast.warning {
+      background-color: #F59E0B;
+      color: white;
+      border-left: 4px solid #D97706;
+    }
+
+    .toast-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toast-icon {
+      flex-shrink: 0;
+    }
+
+    .toast-message {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    .toast-close {
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .toast-close:hover {
+      opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+      .mobile-menu {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        width: 80% !important;
+        max-width: 300px;
+      }
+
+      .mobile-menu.active {
+        transform: translateX(0);
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .mobile-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 30;
+      }
+
+      .mobile-overlay.active {
+        display: block;
+      }
+
+      /* Responsive table container */
+      .table-container {
+        overflow-x: auto;
+        width: 100%;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* Card view for transactions on mobile */
+      .transaction-card {
+        display: none;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background-color: white;
+      }
+
+      .transaction-card .transaction-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #f3f4f3;
+      }
+
+      .transaction-card .transaction-detail {
+        margin-bottom: 0.5rem;
+      }
+
+      .transaction-card .transaction-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+      }
+
+      @media (max-width: 640px) {
+        .transaction-table {
+          display: none;
+        }
+
+        .transaction-card {
+          display: block;
+        }
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 font-sans">
+  <!-- Toast Container -->
+  <div id="toastContainer"></div>
+
+  <!-- Mobile overlay for closing sidebar -->
+  <div id="mobileOverlay" class="mobile-overlay"></div>
+
+  <!-- Mobile Header -->
+  <div class="lg:hidden fixed top-0 left-0 right-0 bg-primary text-white p-4 z-50">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button id="mobileMenuButton" class="text-white">
+          <span class="material-icons">menu</span>
+        </button>
+        <img src="./Images/LOGO KT.svg" alt="KeuTrack Logo" class="w-10 h-10">
+        <span class="text-xl font-semibold">KeuTrack</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="fixed inset-y-0 left-0 w-64 bg-primary text-white mobile-menu lg:translate-x-0 z-40">
+    <div class="p-6 hidden lg:block">
+      <div class="flex items-center space-x-4">
+        <img src="./Images/LOGO KT.svg" alt="KeuTrack Logo" class="w-[70px] h-[70px]">
+        <span class="text-2xl font-semibold">KeuTrack</span>
+      </div>
+    </div>
+    <nav class="mt-20 lg:mt-6">
+      <ul class="space-y-2 px-4">
+        <li>
+          <a href="dashboard.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">analytics</span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="akun.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">account_balance</span>
+            <span>Pengelolaan Akun</span>
+          </a>
+        </li>
+        <li>
+          <a href="transaksi.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-white/20">
+            <span class="material-icons">swap_horiz</span>
+            <span>Transaksi</span>
+          </a>
+        </li>
+        <li>
+          <a href="siklus_akuntansi.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">account_tree</span>
+            <span>Siklus Akuntansi</span>
+          </a>
+        </li>
+        <li>
+          <a href="laporankeuangan.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">summarize</span>
+            <span>Laporan Keuangan</span>
+          </a>
+        </li>
+        <li>
+          <a href="profil.html"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+            <span class="material-icons">person</span>
+            <span>Profil</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="absolute bottom-0 w-full p-4">
+      <button id="logoutButton"
+        class="flex items-center space-x-3 w-full px-4 py-3 rounded-lg hover:bg-white/10 transition-colors">
+        <span class="material-icons">logout</span>
+        <span>Log Out</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-4 lg:p-8 mt-16 lg:mt-0">
+    <!-- Header -->
+    <div class="bg-primary text-white rounded-lg p-6 mb-8">
+      <div>
+        <h1 class="text-2xl font-semibold">Manajemen Transaksi</h1>
+        <p class="text-white/80 mt-1">Tambah dan kelola transaksi keuangan</p>
+      </div>
+    </div>
+
+    <!-- Content Layout: Form di kiri, Tabel di kanan -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+      <!-- Form Input Transaksi (Kiri) -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-6">Input Transaksi Baru</h2>
+
+        <!-- Form transaksi dengan urutan: Tanggal, Deskripsi (opsional), Debit, Kredit -->
+        <form id="transactionForm" class="space-y-4">
+          <!-- Input Tanggal -->
+          <div>
+            <label for="transactionDate" class="block text-sm font-medium text-gray-700 mb-2">Tanggal *</label>
+            <input type="date" id="transactionDate" required
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" />
+          </div>
+
+          <!-- Deskripsi (opsional) -->
+          <div>
+            <label for="transactionDescription" class="block text-sm font-medium text-gray-700 mb-2">Deskripsi
+              (opsional)</label>
+            <textarea id="transactionDescription" placeholder="Masukkan deskripsi transaksi..." rows="3"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"></textarea>
+          </div>
+
+          <!-- Dropdown Debit -->
+          <div>
+            <label for="debitAccountSelect" class="block text-sm font-medium text-gray-700 mb-2">Debit *</label>
+            <select id="debitAccountSelect" required
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+              <option value="">Pilih akun debit...</option>
+              <!-- Opsi akun debit akan diisi dengan JavaScript -->
+            </select>
+          </div>
+
+          <!-- Dropdown Kredit -->
+          <div>
+            <label for="creditAccountSelect" class="block text-sm font-medium text-gray-700 mb-2">Kredit *</label>
+            <select id="creditAccountSelect" required
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+              <option value="">Pilih akun kredit...</option>
+              <!-- Opsi akun kredit akan diisi dengan JavaScript -->
+            </select>
+          </div>
+
+          <!-- Harga Satuan (Rp) -->
+          <div>
+            <label for="unitPrice" class="block text-sm font-medium text-gray-700 mb-2">Nominal (Rp)</label>
+            <input type="text" id="unitPrice" inputmode="numeric" placeholder="0"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-right" />
+          </div>
+
+          <!-- Jumlah Barang -->
+          <div>
+            <label for="quantity" class="block text-sm font-medium text-gray-700 mb-2">Jumlah</label>
+            <input type="number" id="quantity" placeholder="0" min="0" step="1"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-right" />
+          </div>
+
+          <!-- Total Harga (Nominal) -->
+          <div>
+            <label for="transactionAmount" class="block text-sm font-medium text-gray-700 mb-2">Total Harga (Rp)</label>
+            <input type="text" id="transactionAmount" placeholder="0" readonly
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-right bg-gray-50" />
+          </div>
+
+          <!-- Tombol Submit -->
+          <button type="submit"
+            class="w-full px-4 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium">
+            <span class="material-icons mr-2"></span>
+            Tambahkan Transaksi
+          </button>
+        </form>
+      </div>
+
+      <!-- Tabel Daftar Transaksi (Kanan) -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-3">
+          <h2 class="text-lg font-semibold text-gray-800">Daftar Transaksi</h2>
+          <div>
+            <button id="deleteAllTransactionsBtn"
+              class="flex items-center justify-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors w-full sm:w-auto">
+              <span class="material-icons">delete_sweep</span>
+              <span>Hapus Semua</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">TANGGAL</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">KODE DEBIT</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">NAMA REKENING DEBIT</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">KODE KREDIT</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">NAMA REKENING KREDIT</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">KETERANGAN</th>
+                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">HARGA SATUAN</th>
+                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">JUMLAH</th>
+                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">NOMINAL</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">AKSI</th>
+              </tr>
+            </thead>
+            <tbody id="transactionsTableBody" class="divide-y divide-gray-200">
+              <!-- Transaksi akan ditampilkan di sini -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Container untuk card view (mobile) -->
+        <div id="transactionsCardView" class="transaction-card-container">
+          <!-- Kartu transaksi akan diisi oleh JavaScript -->
+        </div>
+
+        <!-- Pesan jika belum ada transaksi -->
+        <div id="noTransactionsMessage" class="text-center py-8 text-gray-500">
+          <span class="material-icons text-4xl mb-2 text-gray-300">receipt_long</span>
+          <p>Belum ada transaksi</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Edit Transaksi -->
+  <div id="editTransactionModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900">Edit Transaksi</h3>
+          <button onclick="closeEditTransactionModal()" class="text-gray-400 hover:text-gray-600">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+
+        <form id="editTransactionForm" class="space-y-4">
+          <div>
+            <label for="editTransactionDate" class="block text-sm font-medium text-gray-700 mb-1">Tanggal *</label>
+            <input type="date" id="editTransactionDate" required
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+          </div>
+
+          <div>
+            <label for="editTransactionDescription" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi
+              (opsional)</label>
+            <textarea id="editTransactionDescription" rows="3"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"></textarea>
+          </div>
+
+          <div>
+            <label for="editDebitAccountSelect" class="block text-sm font-medium text-gray-700 mb-1">Debit *</label>
+            <select id="editDebitAccountSelect" required
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"></select>
+          </div>
+
+          <div>
+            <label for="editCreditAccountSelect" class="block text-sm font-medium text-gray-700 mb-1">Kredit *</label>
+            <select id="editCreditAccountSelect" required
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"></select>
+          </div>
+
+          <div class="flex space-x-3 pt-2">
+            <button type="button" onclick="closeEditTransactionModal()"
+              class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Batal</button>
+            <button type="submit"
+              class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">Simpan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Hapus Transaksi -->
+  <div id="deleteTransactionModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+      <div class="p-6">
+        <div class="flex items-center justify-center mb-4">
+          <span class="material-icons text-red-500 text-4xl">warning</span>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Konfirmasi Hapus</h3>
+        <p class="text-gray-600 text-center mb-6" id="deleteTransactionMessage">Apakah Anda yakin ingin menghapus
+          transaksi ini?</p>
+
+        <div class="flex space-x-3">
+          <button onclick="closeDeleteTransactionModal()"
+            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Batal</button>
+          <button onclick="confirmDeleteTransaction()"
+            class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">Hapus</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Hapus Semua Transaksi -->
+  <div id="deleteAllTransactionsModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+      <div class="p-6">
+        <div class="flex items-center justify-center mb-4">
+          <span class="material-icons text-red-500 text-4xl">delete_sweep</span>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Konfirmasi Hapus Semua</h3>
+        <p class="text-gray-600 text-center mb-6">Apakah Anda yakin ingin menghapus semua transaksi? Tindakan ini tidak
+          dapat dibatalkan.</p>
+
+        <div class="flex space-x-3">
+          <button onclick="closeDeleteAllTransactionsModal()"
+            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Batal</button>
+          <button onclick="confirmDeleteAllTransactions()"
+            class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">Hapus
+            Semua</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Variabel global untuk menyimpan data
+    let accounts = [];
+    let transactions = [];
+
+    // Fungsi untuk menampilkan toast notification
+    function showToast(message, type = 'info') {
+      const toastContainer = document.getElementById('toastContainer');
+
+      // Buat elemen toast
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+
+      // Tentukan icon berdasarkan tipe
+      let icon = 'info';
+      switch (type) {
+        case 'success': icon = 'check_circle'; break;
+        case 'error': icon = 'error'; break;
+        case 'warning': icon = 'warning'; break;
+        case 'info': icon = 'info'; break;
+      }
+
+      toast.innerHTML = `
+    <div class="toast-content">
+      <span class="material-icons toast-icon">${icon}</span>
+      <span class="toast-message">${message}</span>
+      <button class="toast-close" onclick="this.parentElement.parentElement.remove()">
+        <span class="material-icons text-sm">close</span>
+      </button>
+    </div>
+  `;
+
+      // Tambahkan ke container
+      toastContainer.appendChild(toast);
+
+      // Tampilkan toast
+      setTimeout(() => toast.classList.add('show'), 100);
+
+      // Otomatis hilang setelah 3 detik
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.classList.remove('show');
+          setTimeout(() => {
+            if (toast.parentElement) {
+              toast.remove();
+            }
+          }, 300);
+        }
+      }, 3000);
+    }
+
+    // ==================== FUNGSI LOAD DATA ====================
+
+    // Fungsi untuk memuat data akun dari API
+    async function loadAccounts() {
+      // ✅ VALIDASI EKSTRA - Pastikan API benar-benar ready
+      if (!window.KeuTrackAPI || typeof window.KeuTrackAPI.getAccounts !== 'function') {
+        console.error('❌ [TRANSAKSI] CRITICAL: KeuTrackAPI.getAccounts is not a function');
+        console.error('❌ [TRANSAKSI] window.KeuTrackAPI:', window.KeuTrackAPI);
+
+        // Fallback ke localStorage
+        try {
+          const storedAccounts = localStorage.getItem('accounts');
+          accounts = storedAccounts ? JSON.parse(storedAccounts) : [];
+          console.log('✅ [FALLBACK] Loaded accounts from localStorage:', accounts.length);
+          populateDebitCreditDropdowns();
+        } catch (fallbackError) {
+          console.error('❌ [FALLBACK] Error loading from localStorage:', fallbackError);
+          showToast('Gagal memuat data akun', 'error');
+        }
+        return;
+      }
+
+      try {
+        console.log('💾 [TRANSAKSI] Loading accounts from API...');
+        accounts = await window.KeuTrackAPI.getAccounts();
+        console.log('✅ [TRANSAKSI] Accounts loaded successfully:', accounts.length);
+        populateDebitCreditDropdowns();
+      } catch (error) {
+        console.error('❌ [TRANSAKSI] Error loading accounts:', error);
+        // Fallback ke localStorage
+        try {
+          const storedAccounts = localStorage.getItem('accounts');
+          accounts = storedAccounts ? JSON.parse(storedAccounts) : [];
+          console.log('✅ [FALLBACK] Loaded accounts from localStorage after error:', accounts.length);
+          populateDebitCreditDropdowns();
+          showToast('Menggunakan data akun lokal', 'warning');
+        } catch (fallbackError) {
+          console.error('❌ [FALLBACK] Error loading from localStorage:', fallbackError);
+          showToast('Gagal memuat data akun', 'error');
+        }
+      }
+    }
+
+    // Fungsi untuk memuat data transaksi dari API
+    async function loadTransactions() {
+      // ✅ VALIDASI EKSTRA - Pastikan API benar-benar ready
+      if (!window.KeuTrackAPI || typeof window.KeuTrackAPI.getTransactions !== 'function') {
+        console.error('❌ [TRANSAKSI] CRITICAL: KeuTrackAPI.getTransactions is not a function');
+
+        // Fallback ke localStorage
+        try {
+          const storedTransactions = localStorage.getItem('transactions');
+          transactions = storedTransactions ? JSON.parse(storedTransactions) : [];
+          console.log('✅ [FALLBACK] Loaded transactions from localStorage:', transactions.length);
+          displayTransactions();
+        } catch (fallbackError) {
+          console.error('❌ [FALLBACK] Error loading from localStorage:', fallbackError);
+          showToast('Gagal memuat data transaksi', 'error');
+        }
+        return;
+      }
+
+      try {
+        console.log('💾 [TRANSAKSI] Loading transactions from API...');
+        transactions = await window.KeuTrackAPI.getTransactions();
+        console.log('✅ [TRANSAKSI] Transactions loaded successfully:', transactions.length);
+        displayTransactions();
+      } catch (error) {
+        console.error('❌ [TRANSAKSI] Error loading transactions:', error);
+        // Fallback ke localStorage
+        try {
+          const storedTransactions = localStorage.getItem('transactions');
+          transactions = storedTransactions ? JSON.parse(storedTransactions) : [];
+          console.log('✅ [FALLBACK] Loaded transactions from localStorage after error:', transactions.length);
+          displayTransactions();
+          showToast('Menggunakan data transaksi lokal', 'warning');
+        } catch (fallbackError) {
+          console.error('❌ [FALLBACK] Error loading from localStorage:', fallbackError);
+          showToast('Gagal memuat data transaksi', 'error');
+        }
+      }
+    }
+
+    // Fungsi untuk mengisi dropdown Debit & Kredit
+    function populateDebitCreditDropdowns() {
+      const debitSelect = document.getElementById('debitAccountSelect');
+      const creditSelect = document.getElementById('creditAccountSelect');
+      if (!debitSelect || !creditSelect) return;
+
+      // Reset dropdown
+      debitSelect.innerHTML = '<option value="">Pilih akun debit...</option>';
+      creditSelect.innerHTML = '<option value="">Pilih akun kredit...</option>';
+
+      // Tambahkan opsi untuk setiap akun (hanya nama akun)
+      accounts.forEach(account => {
+        const debitOption = document.createElement('option');
+        debitOption.value = account.id;
+        debitOption.textContent = account.name;
+        debitSelect.appendChild(debitOption);
+
+        const creditOption = document.createElement('option');
+        creditOption.value = account.id;
+        creditOption.textContent = account.name;
+        creditSelect.appendChild(creditOption);
+      });
+    }
+
+    // Fungsi untuk menampilkan transaksi di tabel
+    function displayTransactions() {
+      const tableBody = document.getElementById('transactionsTableBody');
+      const noTransactionsMessage = document.getElementById('noTransactionsMessage');
+
+      if (!tableBody || !noTransactionsMessage) return;
+
+      if (transactions.length === 0) {
+        tableBody.innerHTML = '';
+        noTransactionsMessage.classList.remove('hidden');
+        return;
+      }
+
+      // Sembunyikan pesan "belum ada transaksi"
+      noTransactionsMessage.classList.add('hidden');
+
+      // Sortir berdasarkan urutan pembuatan (id ASC) untuk urutan yang stabil - transaksi pertama tetap di atas
+      const sorted = [...transactions].sort((a, b) => {
+        // Gunakan id untuk urutan yang stabil seperti di daftar akun
+        const aId = Number(a.id) || 0;
+        const bId = Number(b.id) || 0;
+        return aId - bId; // ASC - transaksi pertama tetap di atas
+      });
+
+      // Tampilkan transaksi dalam tabel (Tanggal tgl/bln/thn, KODE/NAMA debit/kredit, keterangan, nominal)
+      tableBody.innerHTML = sorted.map(transaction => {
+        const debitAccount = accounts.find(a => a.id == transaction.debit_account_id);
+        const creditAccount = accounts.find(a => a.id == transaction.credit_account_id);
+        const debitName = debitAccount ? debitAccount.name : 'Akun tidak ditemukan';
+        const creditName = creditAccount ? creditAccount.name : 'Akun tidak ditemukan';
+        const debitCode = debitAccount ? (debitAccount.code ?? '') : '';
+        const creditCode = creditAccount ? (creditAccount.code ?? '') : '';
+        
+        // Fix date parsing - use transaction_date from API or date from local
+        const transactionDate = new Date(transaction.transaction_date || transaction.date || Date.now());
+        const tgl = String(transactionDate.getDate()).padStart(2, '0');
+        const bln = String(transactionDate.getMonth() + 1).padStart(2, '0');
+        const thn = String(transactionDate.getFullYear());
+        
+        const unitPrice = Number(transaction.unitPrice || 0);
+        const quantity = Number(transaction.quantity || 0);
+
+        return `
+      <tr class="hover:bg-gray-50 transition-colors">
+        <td class="px-4 py-3 text-sm text-gray-600">${tgl}/${bln}/${thn}</td>
+        <td class="px-4 py-3 text-sm font-mono text-gray-900">${debitCode}</td>
+        <td class="px-4 py-3 text-sm font-medium text-gray-900">${debitName}</td>
+        <td class="px-4 py-3 text-sm font-mono text-gray-900">${creditCode}</td>
+        <td class="px-4 py-3 text-sm font-medium text-gray-900">${creditName}</td>
+        <td class="px-4 py-3 text-sm text-gray-600">${transaction.description || '-'}</td>
+        <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">${formatRupiah(unitPrice)}</td>
+        <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">${quantity}</td>
+        <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">${formatRupiah(transaction.amount || transaction.nominal || 0)}</td>
+        <td class="px-4 py-3 text-sm">
+          <div class="flex items-center gap-2">
+            <button onclick="onEditTransaction('${transaction.id}')" class="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Edit">
+              <span class="material-icons text-base">edit</span>
+            </button>
+            <button onclick="onDeleteTransaction('${transaction.id}')" class="p-1 text-red-600 hover:bg-red-50 rounded transition-colors" title="Hapus">
+              <span class="material-icons text-base">delete</span>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+      }).join('');
+    }
+
+    // Fungsi untuk memformat tanggal
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    }
+
+    // Fungsi untuk memformat rupiah
+    function formatRupiah(number) {
+      return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0
+      }).format(number || 0);
+    }
+
+    // Format input nominal saat mengetik: 10000 -> 10.000
+    function formatNumberGrouping(value) {
+      const digits = (value || '').toString().replace(/\D+/g, '');
+      if (!digits) return '';
+      return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    function parseGroupedNumber(value) {
+      const digits = (value || '').toString().replace(/\D+/g, '');
+      return parseFloat(digits || '0');
+    }
+
+    // ==================== FUNGSI CRUD TRANSAKSI ====================
+
+    // Fungsi untuk menambah transaksi baru
+    async function addTransaction(transactionData) {
+      try {
+        console.log('💾 [TRANSAKSI] Adding new transaction:', transactionData);
+
+        // Cek apakah menggunakan API atau fallback
+        const useAPI = window.KeuTrackAPI && typeof window.KeuTrackAPI.addTransaction === 'function';
+
+        if (useAPI) {
+          const savedTransaction = await window.KeuTrackAPI.addTransaction(transactionData);
+          console.log('✅ [TRANSAKSI] Transaction added via API');
+        } else {
+          console.log('📦 [TRANSAKSI] Using localStorage fallback');
+        }
+
+        // Update local array untuk UI (baik API maupun fallback)
+        const newTransaction = {
+          id: useAPI ? Date.now().toString() : Math.random().toString(36).substr(2, 9),
+          ...transactionData,
+          date: transactionData.date || new Date().toISOString(),
+          unitPrice: Number(transactionData.unitPrice || 0),
+          quantity: Number(transactionData.quantity || 0),
+          tgl: String(new Date(transactionData.date || Date.now()).getDate()).padStart(2, '0'),
+          bln: String(new Date(transactionData.date || Date.now()).getMonth() + 1).padStart(2, '0'),
+          thn: String(new Date(transactionData.date || Date.now()).getFullYear()),
+          type: 'masuk',
+          amount: Number(transactionData.amount || 0),
+          createdAt: new Date().toISOString()
+        };
+
+        transactions.push(newTransaction);
+
+        // Simpan ke localStorage untuk fallback
+        if (!useAPI) {
+          localStorage.setItem('transactions', JSON.stringify(transactions));
+        }
+
+        // Broadcast perubahan
+        try {
+          const broadcastChannel = new BroadcastChannel('keutrack-updates');
+          broadcastChannel.postMessage({ type: 'transaction-updated' });
+        } catch (error) {
+          console.log('BroadcastChannel not supported');
+        }
+
+        console.log('✅ [TRANSAKSI] Transaction added successfully');
+        showToast('✅ Transaksi berhasil ditambahkan', 'success');
+        document.getElementById('transactionForm').reset();
+        
+        // Refresh accounts and transactions after adding
+        await loadAccounts();
+        await loadTransactions();
+
+      } catch (error) {
+        console.error('Error adding transaction:', error);
+        showToast('Gagal menambahkan transaksi: ' + error.message, 'error');
+      }
+    }
+
+    // State untuk edit/hapus
+    let editingTransactionId = null;
+    let deletingTransactionId = null;
+
+    // Buka modal edit transaksi
+    function onEditTransaction(transactionId) {
+      console.log('🔧 [EDIT] Attempting to edit transaction ID:', transactionId);
+      const trx = transactions.find(t => t.id == transactionId); // Use loose equality
+      if (!trx) {
+        console.error('❌ [EDIT] Transaction not found for ID:', transactionId);
+        showToast('Transaksi tidak ditemukan', 'error');
+        return;
+      }
+      
+      console.log('✅ [EDIT] Transaction found:', trx.description || 'No description');
+      editingTransactionId = transactionId;
+
+      // Set nilai form edit
+      document.getElementById('editTransactionDate').value = (trx.date || '').substring(0, 10);
+      document.getElementById('editTransactionDescription').value = trx.description || '';
+
+      // Populate dropdown edit dengan akun
+      populateEditDropdowns(trx.debit_account_id, trx.credit_account_id);
+
+      // Tampilkan modal
+      document.getElementById('editTransactionModal').classList.remove('hidden');
+    }
+
+    function closeEditTransactionModal() {
+      document.getElementById('editTransactionModal').classList.add('hidden');
+      document.getElementById('editTransactionForm').reset();
+      editingTransactionId = null;
+    }
+
+    function populateEditDropdowns(selectedDebitId, selectedCreditId) {
+      const editDebit = document.getElementById('editDebitAccountSelect');
+      const editCredit = document.getElementById('editCreditAccountSelect');
+      if (!editDebit || !editCredit) return;
+
+      // Reset
+      editDebit.innerHTML = '';
+      editCredit.innerHTML = '';
+
+      accounts.forEach(account => {
+        const optD = document.createElement('option');
+        optD.value = account.id;
+        optD.textContent = account.name;
+        if (account.id == selectedDebitId) optD.selected = true; // Use loose equality
+        editDebit.appendChild(optD);
+
+        const optC = document.createElement('option');
+        optC.value = account.id;
+        optC.textContent = account.name;
+        if (account.id == selectedCreditId) optC.selected = true; // Use loose equality
+        editCredit.appendChild(optC);
+      });
+    }
+
+    // Hapus transaksi dengan modal konfirmasi
+    function onDeleteTransaction(transactionId) {
+      console.log('🗑️ [DELETE] Attempting to delete transaction ID:', transactionId);
+      const trx = transactions.find(t => t.id == transactionId); // Use loose equality
+      if (!trx) {
+        console.error('❌ [DELETE] Transaction not found for ID:', transactionId);
+        showToast('Transaksi tidak ditemukan', 'error');
+        return;
+      }
+      
+      console.log('✅ [DELETE] Transaction found:', trx.description || 'No description');
+      deletingTransactionId = transactionId;
+      document.getElementById('deleteTransactionMessage').textContent = 'Apakah Anda yakin ingin menghapus transaksi ini?';
+      document.getElementById('deleteTransactionModal').classList.remove('hidden');
+    }
+
+    function closeDeleteTransactionModal() {
+      document.getElementById('deleteTransactionModal').classList.add('hidden');
+      deletingTransactionId = null;
+    }
+
+    async function confirmDeleteTransaction() {
+      if (!deletingTransactionId) return;
+
+      try {
+        console.log('💾 [TRANSAKSI] Deleting transaction:', deletingTransactionId);
+
+        // Cek apakah menggunakan API atau fallback
+        const useAPI = window.KeuTrackAPI && typeof window.KeuTrackAPI.deleteTransaction === 'function';
+
+        if (useAPI) {
+          await window.KeuTrackAPI.deleteTransaction(deletingTransactionId);
+          console.log('✅ [TRANSAKSI] Transaction deleted via API');
+        } else {
+          console.log('📦 [TRANSAKSI] Using localStorage fallback for delete');
+        }
+
+        // Update local array
+        transactions = transactions.filter(t => t.id != deletingTransactionId); // Use loose equality
+
+        // Simpan ke localStorage untuk fallback
+        if (!useAPI) {
+          localStorage.setItem('transactions', JSON.stringify(transactions));
+        }
+
+        // Broadcast perubahan
+        try {
+          const broadcastChannel = new BroadcastChannel('keutrack-updates');
+          broadcastChannel.postMessage({ type: 'transaction-updated' });
+        } catch (error) {
+          console.log('BroadcastChannel not supported');
+        }
+
+        console.log('✅ [TRANSAKSI] Transaction deleted successfully');
+        showToast('✅ Transaksi berhasil dihapus', 'success');
+        closeDeleteTransactionModal();
+        
+        // Refresh accounts and transactions after deletion
+        await loadAccounts();
+        await loadTransactions();
+      } catch (error) {
+        console.error('Error deleting transaction:', error);
+        showToast('Gagal menghapus transaksi: ' + error.message, 'error');
+      }
+    }
+
+    function closeDeleteAllTransactionsModal() {
+      document.getElementById('deleteAllTransactionsModal').classList.add('hidden');
+    }
+
+    async function confirmDeleteAllTransactions() {
+      try {
+        console.log('💾 [TRANSAKSI] Deleting all transactions...');
+
+        // Cek apakah menggunakan API atau fallback
+        const useAPI = window.KeuTrackAPI && typeof window.KeuTrackAPI.deleteTransaction === 'function';
+
+        if (useAPI) {
+          // Delete all via API
+          for (const transaction of transactions) {
+            await window.KeuTrackAPI.deleteTransaction(transaction.id);
+          }
+          console.log('✅ [TRANSAKSI] All transactions deleted via API');
+        } else {
+          console.log('📦 [TRANSAKSI] Using localStorage fallback for delete all');
+        }
+
+        // Clear local array
+        transactions = [];
+
+        // Simpan ke localStorage untuk fallback
+        if (!useAPI) {
+          localStorage.setItem('transactions', JSON.stringify(transactions));
+        }
+
+        // Broadcast perubahan
+        try {
+          const broadcastChannel = new BroadcastChannel('keutrack-updates');
+          broadcastChannel.postMessage({ type: 'transaction-updated' });
+        } catch (error) {
+          console.log('BroadcastChannel not supported');
+        }
+
+        console.log('✅ [TRANSAKSI] All transactions deleted successfully');
+        showToast('✅ Semua transaksi berhasil dihapus', 'success');
+        closeDeleteAllTransactionsModal();
+        
+        // Refresh accounts and transactions after deletion
+        await loadAccounts();
+        await loadTransactions();
+        document.getElementById('noTransactionsMessage').classList.remove('hidden');
+      } catch (error) {
+        console.error('Error deleting all transactions:', error);
+        showToast('Gagal menghapus semua transaksi: ' + error.message, 'error');
+      }
+    }
+
+    // ==================== EVENT LISTENERS & INITIALIZATION ====================
+
+    // Wait for API function dengan retry
+    const waitForAPI = () => {
+      return new Promise((resolve) => {
+        let retries = 0;
+        const maxRetries = 10;
+
+        const checkAPI = () => {
+          console.log('🔍 [TRANSAKSI] Checking API availability, attempt:', retries + 1);
+
+          if (window.KeuTrackAPI &&
+            typeof window.KeuTrackAPI.getAccounts === 'function' &&
+            typeof window.KeuTrackAPI.getTransactions === 'function') {
+            console.log('✅ [TRANSAKSI] API is ready with all methods!');
+            resolve(true);
+          } else if (retries < maxRetries) {
+            retries++;
+            setTimeout(checkAPI, 200);
+          } else {
+            console.warn('⚠️ [TRANSAKSI] API failed to load, using fallback mode');
+            resolve(false);
+          }
+        };
+        checkAPI();
+      });
+    };
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', async function () {
+      console.log('🚀 [TRANSAKSI] Page loaded, initializing...');
+
+      // Tunggu API atau fallback
+      let apiReady = false;
+      try {
+        apiReady = await waitForAPI();
+      } catch (error) {
+        console.warn('⚠️ [TRANSAKSI] API wait failed, using fallback');
+        apiReady = false;
+      }
+
+      if (apiReady) {
+        console.log('🔄 [TRANSAKSI] Starting data loading from API...');
+        await loadAccounts();
+        await loadTransactions();
+      } else {
+        console.log('🔄 [TRANSAKSI] Starting data loading from localStorage...');
+        // Load dari localStorage fallback
+        try {
+          const storedAccounts = localStorage.getItem('accounts');
+          const storedTransactions = localStorage.getItem('transactions');
+
+          accounts = storedAccounts ? JSON.parse(storedAccounts) : [];
+          transactions = storedTransactions ? JSON.parse(storedTransactions) : [];
+
+          console.log('✅ [FALLBACK] Loaded from localStorage - accounts:', accounts.length, 'transactions:', transactions.length);
+
+          populateDebitCreditDropdowns();
+          displayTransactions();
+
+          showToast('Mode offline - menggunakan data lokal', 'info');
+        } catch (error) {
+          console.error('❌ [FALLBACK] Error loading from localStorage:', error);
+          showToast('Gagal memuat data', 'error');
+        }
+      }
+
+      // Set default tanggal ke hari ini
+      const dateInput = document.getElementById('transactionDate');
+      if (dateInput) {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        dateInput.value = `${yyyy}-${mm}-${dd}`;
+      }
+
+      // Event listener untuk form transaksi
+      document.getElementById('transactionForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const unitPrice = parseGroupedNumber(document.getElementById('unitPrice').value);
+        const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+        const total = unitPrice * quantity;
+        document.getElementById('transactionAmount').value = formatNumberGrouping(String(total));
+
+        const formData = {
+          date: new Date(document.getElementById('transactionDate').value + 'T00:00:00').toISOString(),
+          description: document.getElementById('transactionDescription').value.trim(),
+          debit_account_id: document.getElementById('debitAccountSelect').value,
+          credit_account_id: document.getElementById('creditAccountSelect').value,
+          amount: total,
+          nominal: total,
+          unitPrice: unitPrice,
+          quantity: quantity
+        };
+
+        // Validasi form
+        if (!formData.date) {
+          showToast('Mohon isi tanggal transaksi', 'error');
+          return;
+        }
+        if (!formData.debit_account_id) {
+          showToast('Mohon pilih akun Debit', 'error');
+          return;
+        }
+        if (!formData.credit_account_id) {
+          showToast('Mohon pilih akun Kredit', 'error');
+          return;
+        }
+        if (formData.debit_account_id === formData.credit_account_id) {
+          showToast('Akun Debit dan Kredit tidak boleh sama', 'error');
+          return;
+        }
+        if (formData.amount <= 0) {
+          showToast('Nominal transaksi harus lebih dari 0', 'error');
+          return;
+        }
+
+        await addTransaction(formData);
+      });
+
+      // Helper untuk update total nominal
+      function updateTotalNominal() {
+        const unitPrice = parseGroupedNumber(document.getElementById('unitPrice').value);
+        const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+        const total = unitPrice * quantity;
+        document.getElementById('transactionAmount').value = formatNumberGrouping(String(total));
+      }
+
+      // Event listeners untuk input changes
+      document.getElementById('debitAccountSelect').addEventListener('change', updateTotalNominal);
+      document.getElementById('creditAccountSelect').addEventListener('change', updateTotalNominal);
+      document.getElementById('unitPrice').addEventListener('input', (e) => {
+        e.target.value = formatNumberGrouping(e.target.value);
+        updateTotalNominal();
+      });
+      document.getElementById('quantity').addEventListener('input', updateTotalNominal);
+
+      // Event listener untuk form edit
+      const editForm = document.getElementById('editTransactionForm');
+      if (editForm) {
+        editForm.addEventListener('submit', function (e) {
+          e.preventDefault();
+          if (!editingTransactionId) return;
+
+          const newDateIso = new Date(document.getElementById('editTransactionDate').value + 'T00:00:00').toISOString();
+          const newDesc = document.getElementById('editTransactionDescription').value.trim();
+          const newDebitId = document.getElementById('editDebitAccountSelect').value;
+          const newCreditId = document.getElementById('editCreditAccountSelect').value;
+
+          if (!newDebitId || !newCreditId) {
+            showToast('Mohon pilih akun Debit dan Kredit', 'error');
+            return;
+          }
+          if (newDebitId === newCreditId) {
+            showToast('Akun Debit dan Kredit tidak boleh sama', 'error');
+            return;
+          }
+
+          const trx = transactions.find(t => t.id === editingTransactionId);
+          if (!trx) return;
+          trx.date = newDateIso;
+          trx.description = newDesc;
+          trx.debit_account_id = newDebitId;
+          trx.credit_account_id = newCreditId;
+          trx.updatedAt = new Date().toISOString();
+
+          // Simpan perubahan ke localStorage jika fallback
+          if (!window.KeuTrackAPI || typeof window.KeuTrackAPI.updateTransaction !== 'function') {
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+          }
+
+          showToast('Transaksi berhasil diupdate', 'success');
+          closeEditTransactionModal();
+          
+          // Refresh accounts and transactions after update
+          loadAccounts();
+          loadTransactions();
+        });
+      }
+
+      // Event listener untuk tombol logout
+      document.getElementById('logoutButton').addEventListener('click', () => {
+        if (confirm('Apakah Anda yakin ingin keluar?')) {
+          localStorage.removeItem('currentUser');
+          localStorage.removeItem('userPreferences');
+          window.location.href = 'login.html';
+        }
+      });
+
+      // Tombol hapus semua transaksi
+      document.getElementById('deleteAllTransactionsBtn').addEventListener('click', () => {
+        if (transactions.length === 0) {
+          showToast('Tidak ada transaksi untuk dihapus', 'warning');
+          return;
+        }
+        document.getElementById('deleteAllTransactionsModal').classList.remove('hidden');
+      });
+
+      // Expose functions to global scope untuk onclick attributes
+      window.onEditTransaction = onEditTransaction;
+      window.onDeleteTransaction = onDeleteTransaction;
+      window.closeEditTransactionModal = closeEditTransactionModal;
+      window.closeDeleteTransactionModal = closeDeleteTransactionModal;
+      window.confirmDeleteTransaction = confirmDeleteTransaction;
+      window.closeDeleteAllTransactionsModal = closeDeleteAllTransactionsModal;
+      window.confirmDeleteAllTransactions = confirmDeleteAllTransactions;
+      
+      // Debug: Log exposed functions
+      console.log('🔧 [TRANSAKSI PAGE] Functions exposed to global scope:');
+      console.log('  - onEditTransaction:', typeof window.onEditTransaction);
+      console.log('  - onDeleteTransaction:', typeof window.onDeleteTransaction);
+      console.log('  - confirmDeleteTransaction:', typeof window.confirmDeleteTransaction);
+    });
+
+    // Function untuk mengatur menu aktif berdasarkan halaman saat ini
+    function setActiveMenu() {
+      // Hapus semua kelas aktif terlebih dahulu
+      document.querySelectorAll('nav a').forEach(link => {
+        link.classList.remove('bg-white/20');
+      });
+
+      // Dapatkan nama halaman saat ini
+      const currentPage = window.location.pathname.split('/').pop();
+
+      // Temukan link yang sesuai dan tambahkan kelas aktif
+      document.querySelectorAll('nav a').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href === currentPage) {
+          link.classList.add('bg-white/20');
+        }
+      });
+    }
+
+    // Panggil function saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', function () {
+      setActiveMenu();
+
+      // Juga panggil saat mobile menu button diklik (jika ada)
+      const mobileMenuButton = document.getElementById('mobileMenuButton');
+      if (mobileMenuButton) {
+        mobileMenuButton.addEventListener('click', setActiveMenu);
+      }
+    });
+  </script>
+
+  <!-- Script Toggle Sidebar -->
+  <script>
+    const mobileMenuButton = document.getElementById("mobileMenuButton");
+    const mobileMenu = document.querySelector(".mobile-menu");
+    const mobileOverlay = document.getElementById("mobileOverlay");
+
+    function toggleMobileMenu() {
+      mobileMenu.classList.toggle("active");
+      mobileOverlay.classList.toggle("active");
+      document.body.style.overflow = mobileMenu.classList.contains("active") ? "hidden" : "";
+    }
+
+    function closeMobileMenu() {
+      mobileMenu.classList.remove("active");
+      mobileOverlay.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+
+    if (mobileMenuButton && mobileMenu && mobileOverlay) {
+      mobileMenuButton.addEventListener("click", toggleMobileMenu);
+      mobileOverlay.addEventListener("click", closeMobileMenu);
+
+      // Close menu ketika link di klik
+      document.querySelectorAll('.mobile-menu a').forEach(link => {
+        link.addEventListener('click', closeMobileMenu);
+      });
+    }
+  </script>
+</body>
+
+</html>
